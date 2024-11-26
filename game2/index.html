@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dice Game</title>
+    <style>
+        #gameImage img {
+            width: 100px; /* Adjust size as needed */
+            transition: opacity 0.5s ease;
+        }
+        #gameImage {
+            display: flex;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameImage">
+        <img src="./images/dice1dot.gif" alt="Dice 1">
+        <img src="./images/dice2dot.gif" alt="Dice 2">
+        <img src="./images/dice3dot.gif" alt="Dice 3">
+        <img src="./images/dice4dot.gif" alt="Dice 4">
+        <img src="./images/dice5dot.gif" alt="Dice 5">
+        <img src="./images/dice6dot.gif" alt="Dice 6"> 
+    </div>
+
+    <button id="Tai">Tai</button>
+    <button id="Xiu">Xiu</button>
+    <button id="Chan">Chan</button>
+    <button id="Le">Le</button>
+
+    <div id="debugMessage"></div>
+    <div id="resultMessage"></div>
+
+    <script>
+        const imagesContainer = document.getElementById('gameImage');
+        const debugMessage = document.getElementById('debugMessage');
+        const resultMessage = document.getElementById('resultMessage');
+
+        const imagesArr = Array.from(imagesContainer.getElementsByTagName('img'));
+        const dice = [1, 2, 3, 4, 5, 6];
+
+        function handleButtonClick(event) {
+            const buttonId = event.target.id; // Get the ID of the clicked button
+            debugMessage.textContent = `Ban chon: ${buttonId}`; // Debug
+            return buttonId; // Return buttonId instead of numeric value
+        }
+
+        function showDiceImage() {
+            let nums = Array.from({length: 3}, () => Math.floor(Math.random() * 6));
+            imagesArr.forEach(img => {
+                img.style.opacity = '0';
+            });
+            nums.forEach(index => {
+            const selectedImage = imagesArr[index];
+            selectedImage.style.opacity = '1';
+            })
+            
+        return nums.reduce((accumulator, currentValue) => {return accumulator + currentValue;}, 0);
+        }
+
+        function startGame(event) {
+            const getResult = handleButtonClick(event); // Get the result based on the button clicked
+            let result = 0; // Reset result for the new game
+
+            // Show 5 dice rolls
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    let currentRollResult = 0; // Reset currentRollResult for this roll
+                    let temp = showDiceImage(); 
+                    if(i == 4) result = temp + 3;
+                }, i * 1000); // Delay for each image spawn
+            }
+
+            // Final result check after all images have been shown
+            setTimeout(() => {
+                let checkResult = false;
+                switch (getResult) {
+                    case 'Tai':
+                        checkResult = result > 10; break;
+                    case 'Xiu':
+                        checkResult = result < 11; break;
+                    case 'Chan':
+                        checkResult = result % 2 === 0; break;
+                    case 'Le':
+                        checkResult = result % 2 === 1; break;
+                }
+                const finalResult = checkResult ? "Ban da thang!" : "Ban thua roi..";
+                resultMessage.textContent = `Ket qua cuoi: ${result} , ${finalResult}`; // Display the final result
+            }, 5000); // Wait for all images to be shown before checking the result
+        }
+
+        document.getElementById('Tai').addEventListener('click', startGame);
+        document.getElementById('Xiu').addEventListener('click', startGame);
+        document.getElementById('Chan').addEventListener('click', startGame);
+        document.getElementById('Le').addEventListener('click', startGame);
+    </script>
+</body>
+</html>
