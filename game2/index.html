@@ -73,14 +73,14 @@
 
             const getResult = handleButtonClick(event); // Get the result based on the button clicked
             let result = 0; // Reset result for the new game
-
+            let getLoop = Math.floor(Math.random() * 6) + 5
             // Show 5 dice rolls
-            for (let i = 0; i < 5; i++) {
+            for (let i = 0; i < getLoop; i++) {
                 setTimeout(() => {
                     let currentRollResult = 0; // Reset currentRollResult for this roll
                     let temp = showDiceImage(); 
-                    if(i == 4) result = temp + 3;
-                }, i * 1000); // Delay for each image spawn
+                    if(i == getLoop - 1){result = temp + 3; i = 0;getLoop = 0;}
+                }, i * 500 ); // Delay for each image spawn
             }
 
             // Final result check after all images have been shown
