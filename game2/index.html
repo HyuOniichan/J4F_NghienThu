@@ -40,6 +40,7 @@
 
         const imagesArr = Array.from(imagesContainer.getElementsByTagName('img'));
         const dice = [1, 2, 3, 4, 5, 6];
+        let isButtonClicked = false; // Flag to prevent multiple clicks
 
         function handleButtonClick(event) {
             const buttonId = event.target.id; // Get the ID of the clicked button
@@ -67,6 +68,9 @@
         }
 
         function startGame(event) {
+            if (isButtonClicked) return; // Prevent further clicks if already clicked
+            isButtonClicked = true; // Set the flag to true
+
             const getResult = handleButtonClick(event); // Get the result based on the button clicked
             let result = 0; // Reset result for the new game
 
@@ -94,7 +98,8 @@
                 }
                 const finalResult = checkResult ? "Ban da thang!" : "Ban thua roi..";
                 resultMessage.textContent = `Ket qua cuoi: ${result} , ${finalResult}`; // Display the final result
-            }, 5000); // Wait for all images to be shown before checking the result
+                isButtonClicked = false; // Reset the flag after the game is finished
+            },  5000); // Wait for all images to be shown before checking the result
         }
 
         document.getElementById('Tai').addEventListener('click', startGame);
