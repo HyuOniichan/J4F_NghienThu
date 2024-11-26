@@ -48,16 +48,22 @@
         }
 
         function showDiceImage() {
+            // Clear current images
+            imagesContainer.innerHTML = '';
+
+            // Scroll to the top of the page
+            window.scrollTo(0, 0);
+
+            // Generate 3 random dice images
             let nums = Array.from({length: 3}, () => Math.floor(Math.random() * 6));
-            imagesArr.forEach(img => {
-                img.style.opacity = '0';
-            });
             nums.forEach(index => {
-            const selectedImage = imagesArr[index];
-            selectedImage.style.opacity = '1';
-            })
-            
-        return nums.reduce((accumulator, currentValue) => {return accumulator + currentValue;}, 0);
+                const selectedImage = imagesArr[index].cloneNode(); // Clone the image to keep the original
+                selectedImage.style.opacity = '1'; // Ensure the image is visible
+                imagesContainer.appendChild(selectedImage); // Append to the container
+            });
+
+            // Return the sum of the random numbers
+            return nums.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
         }
 
         function startGame(event) {
