@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dodge the Obstacles</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #eca1a6;
+            margin: 0;
+        }
+        canvas {
+            background: #82b74b;
+            border: 3px solid #000;
+        }
+        #gameField {
+        text-align: center;
+        }
+        #gameStart {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="GameField">
+        <canvas id="gameCanvas" width="400" height="600"></canvas>
+        <button id="gameStart">Start Game</button>
+    </div>
+    <script src="gameplay.js"></script>
+</body>
+</html>
