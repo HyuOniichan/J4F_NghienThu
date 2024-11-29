@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water sort</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #3f1616;
+            margin: 0;
+        }
+        .parentDiv {
+            position: fixed; /* Position the div relative to the viewport */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-wrap: wrap; /* Allow wrapping to create multiple rows */
+            justify-content: space-around; /* Space evenly around items */
+            width: 100%; /* Set a specific width for the parent */
+            max-width: 1300px; /* Optional: limit the maximum width */
+            padding: 10px; /* Optional padding around the parent */
+            border: 4px solid #ccc; /* Optional border */
+        }
+
+        .gameButton {
+            position: absolute; 
+            bottom: 20px;
+            right: 150px; 
+        }
+
+        .childDiv {
+            width: calc(13.33% - 10px); /* Each child takes approximately 1/6 of the width minus gap */
+            margin-bottom: 10px; /* Space between rows */
+            padding: 20px; /* Optional padding inside each child */
+        }
+
+        .rectangle {
+            width: 80px;              /* Width of the rectangle */
+            height: 50px;             /* Height of the rectangle */
+            background-color: blue;    /* Background color */
+            border: 0.5px solid black;    /* Black border */
+            align-items: center;
+        }
+
+        .myButton {
+            width: 150px; 
+            height: 40px; 
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <div class="parentDiv">
+            <div class="childDiv Bottle0 C0"></div>
+            <div class="childDiv Bottle1 C1"></div>
+            <div class="childDiv Bottle2 C2"></div>
+            <div class="childDiv Bottle3 C3"></div>
+            <div class="childDiv Bottle4 C4"></div>
+            <div class="childDiv Bottle5 C5"></div>
+            <div class="childDiv Bottle6 C6"></div>
+            <div class="childDiv Bottle7 C7"></div>
+            <div class="childDiv Bottle8 C8"></div>
+            <div class="childDiv Bottle9 C9"></div>
+            <div class="childDiv Bottle10 C10"></div>
+            <div class="childDiv Bottle11 C11"></div>     
+        </div>
+        <div class="gameButton">
+            <button id="newGame" style="background-color :burlywood;" class="myButton" >New Game</button>
+            <button id="undoButton" style="background-color : red" class="myButton">Undo</button>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
