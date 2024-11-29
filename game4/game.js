@@ -24,13 +24,13 @@ for (let i = 0; i < 4; i++) {
 const colorPalette = {
     0: "#f0f0f0",
     1: "#c94c4c",
-    2: "#feb236",
+    2: "feb236#",
     3: "#a2c11c",
     4: "#4040a1",
-    5: "#f7cac9",
+    5: "#fda403",
     6: "#ffef96",
     7: "#7c73e6",
-    8: "#f9d5e5",
+    8: "#c54c82",
     9: "#588c7e",
     10: "#80ced6",
 };
@@ -54,16 +54,27 @@ function addHistory(newArr) {
 }
 
 // Undo button functionality
-function modifyHistory() {
+
+function undoHistory() {
     if (history.length > 1) {
-        currentArray = history.pop(); // Revert to the last state
+        // Create a copy of the history array *before* removing the last element
+        const previousHistory = history.slice(0, history.length - 1);
+
+        // Now you have a copy to restore from
+        history = previousHistory;
+
+        clearDiv();
         createBottles();
+        console.log('undo')
         // Disable the undo button if there's no history left
         if (history.length === 1) {
             document.getElementById('undoButton').disabled = true;
         }
     }
 }
+
+document.getElementById('undoButton').addEventListener('click',undoHistory)
+
 /* clear all div */
 function clearDiv() {
     const childDivs = document.getElementsByClassName("childDiv");
@@ -128,15 +139,19 @@ function clicked(event) {
   }
 
 function handleClicks(firstBottle,secondBottle){
-    let current = history[history.length - 1];
-    if(current[0][secondBottle] != '#f0f0f0' || current[3][firstBottle] == '#f0f0f0') return;
+    let current = JSON.parse(JSON.stringify(history[history.length - 1]));
+    if(current[0][secondBottle] != '#f0f0f0' || current[3][firstBottle] == '#f0f0f0' || firstBottle === secondBottle) return;
     let availSpace = 0;
     let waterLength = 0;
     let color = '';
+    let color2 = '#f0f0f0';
     let startPoint = 0;
     //calculate the available space at bottle 2
     for(let i = 0; i < 4; i++){
-        if(current[i][secondBottle] != '#f0f0f0') break;
+        if(current[i][secondBottle] != '#f0f0f0'){
+            color2 = current[i][secondBottle]
+            break;
+        }
         availSpace++;
     }
     //calculate the amount of waters levels has same color at bottle 1
@@ -151,6 +166,9 @@ function handleClicks(firstBottle,secondBottle){
             break;
         }
     }
+    if(color != color2 && color2 != '#f0f0f0') return;
+    console.log(color)
+    console.log(color2)
     while(availSpace != 0 && waterLength != 0){
         current[availSpace - 1][secondBottle] = color
         current[startPoint][firstBottle] = '#f0f0f0'
@@ -158,9 +176,26 @@ function handleClicks(firstBottle,secondBottle){
         waterLength--
         availSpace--
     }
-    addHistory(current);
     createBottles();
+    addHistory(current);
+    checkWin(current);
 }
+/*track if you win ? */
+function checkWin(arr){
+    for(let i = 0; i < 12; i++){
+        let color = arr[0][i]
+        for(let j = 0; j < 4;j++){
+            if(color != arr[j][i]) return;
+        }
+    }
+    console.log('you win')
+    onWinning();
+}
+
+function onWinning(){
+    alert('GG bro you win the game!');
+}
+
 
 /* game button control*/
 function startGame() {
