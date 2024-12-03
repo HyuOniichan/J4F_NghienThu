@@ -176,8 +176,8 @@ function handleClicks(firstBottle,secondBottle){
         waterLength--
         availSpace--
     }
-    createBottles();
     addHistory(current);
+    createBottles();
     checkWin(current);
 }
 /*track if you win ? */
