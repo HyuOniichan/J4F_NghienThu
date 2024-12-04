@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battle Ship</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #65e6bd;
+            margin: 0;
+        }
+        canvas {
+            border: 5px solid #000;
+            display: block;
+            opacity: 0.6;
+            background-color: #f0f0f0;
+        }
+        button {
+            width: 80px;
+            height: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div id="you">
+        <canvas id="myField" style="margin-right: 50px;"></canvas>
+    </div>
+    <div id="firstStep" >
+        <h2 style="color: chocolate;">Place your ships by click cells on the left</h2>
+        <canvas id="ships" width="300" height="300"></canvas>
+        <div style="display: flex;margin-top: 10px; left: 0;">
+            <h2 id="if-Ilegal" style="margin-right: 30px;color:blue;">The field is illegal</h2>
+            <button id="confirm" style="background-color: crimson;">Confirm</button>
+            <button id="getRandom">Random field</button>
+        </div>
+    </div>
+    <div style="flex-direction: column;">
+        <canvas id="arrow" style="display: none;background-color: #65e6bd;border: 0px;" height="200" width="200"></canvas>
+        <p id="tutorial" style="color:cornsilk"></p>
+    </div>
+    <div id="bot">
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
