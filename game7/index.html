@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2048</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <p style="font-size: 36px;color: rgb(76, 152, 0);"><strong>Game 2048</strong></p>
+    <div class="container">
+        <div class="row">
+            <h1 id="score">Score: 0</h1>
+                <button class="undo" id="undo">Undo</button>
+                <button id="newGame" class="button">Restart</button>
+        </div>
+        <div class="row" id="r0">
+            <div class="box" id="b00"></div>
+            <div class="box" id="b01"></div>
+            <div class="box" id="b02"></div>
+            <div class="box" id="b03"></div>
+        </div>
+        <div class="row" id="r1">
+            <div class="box" id="b10"></div>
+            <div class="box" id="b11"></div>
+            <div class="box" id="b12"></div>
+            <div class="box" id="b13"></div>
+        </div>
+        <div class="row" id="r2">
+            <div class="box" id="b20"></div>
+            <div class="box" id="b21"></div>
+            <div class="box" id="b22"></div>
+            <div class="box" id="b23"></div>
+        </div>
+        <div class="row" id="r3">
+            <div class="box" id="b30"></div>
+            <div class="box" id="b31"></div>
+            <div class="box" id="b32"></div>
+            <div class="box" id="b33"></div>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>

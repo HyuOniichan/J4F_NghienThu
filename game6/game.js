@@ -554,7 +554,6 @@ function botTurn() {
                         if (shipInfo.cells.length === isLen) {
                             blow(shipInfo, ctx, 'pink', field);
                             findingShip = false;
-                            debug(`ship with ${isRight} length`)
                             break
                         }
                     } 
