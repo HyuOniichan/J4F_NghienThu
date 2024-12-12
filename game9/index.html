@@ -34,6 +34,15 @@
             background-color:cornsilk;
             color: darkslategray;
         }
+        .contentCanvas {
+            opacity: 1.0;
+            position: absolute;
+            top: 50px;
+            background-color: rgba(0, 0, 0, 0);
+            width: 600px;
+            height: 420px;
+            border: 5px solid rgba(0, 0, 0, 0);
+        }
     </style>
 </head>
 <body>
@@ -46,6 +55,7 @@
             <option style="color: blueviolet;" value="impossible">Impossible</option>
             <option style="color: lightseagreen;background-color: darkblue;" value="yourMom">Your Mom</option>
         </select>
+        <canvas id="fullOpacity" class="contentCanvas"></canvas>
         <canvas id="field"></canvas>
         <script src="domin.js"></script>
     </div>

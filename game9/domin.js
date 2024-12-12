@@ -1,5 +1,8 @@
-const canvas = document.getElementById('field')
-const ctx = canvas.getContext('2d')
+const o_canvas = document.getElementById('field')
+const octx = o_canvas.getContext('2d')
+//get canvas with full opacity
+const canvas = document.getElementById('fullOpacity')
+const ctx =  canvas.getContext('2d')
 //width,height of normal gamemode : 15 x 18 
 const container = document.getElementById('container')
 let c_width = container.style.width
@@ -14,6 +17,10 @@ let c_evenSquareColor = 'lightblue'
 let c_oddSquareColor = 'aliceblue'
 //default square size
 let s_squareSize = 30
+//default font size
+let s_FontSize = 24
+//default flag image source
+const i_flagSource = './image/flag.png'
 //default difficult
 let d_playOnDifficult = 'medium'
 //default field
@@ -27,31 +34,35 @@ bar.addEventListener('change',(event) => {
     const difficult = event.target.value
     getNewCanvas(difficult)
 })
-//get new canvas by change option
+//get new o_canvas by change option
 let flags = 40
 function getNewCanvas(difficult){
     switch(difficult){
         case 'easy' :
             flags = 20
             s_squareSize = 33
+            s_FontSize = 28
             c_height = '396px'
             c_width = '396px'
             break
         case 'medium' :
             flags = 40
             s_squareSize = 30
+            s_FontSize = 24
             c_height = '420px'
             c_width = '600px'
             break
         case 'hard' :
             flags = 99
             s_squareSize = 25
+            s_FontSize = 20
             c_height = '500px'
             c_width = '600px'
             break
         case 'impossible' :
-            flags = 210
+            flags = 300
             s_squareSize = 15
+            s_FontSize = 12
             c_height = '630px'
             c_width = '1035px'
             break
@@ -66,51 +77,67 @@ function getNewCanvas(difficult){
             break
     }
     if(difficult != 'yourMom'){
-        cols = parseInt(c_width) / s_squareSize;
-        rows = parseInt(c_height) / s_squareSize;   
-        canvas.width = parseInt(c_width) 
-        canvas.height = parseInt(c_height)
+        cols = parseInt(c_width) ;
+        rows = parseInt(c_height) ;   
+        o_canvas.width = cols
+        o_canvas.height = rows
+        canvas.style.width = c_width
+        canvas.style.height = c_height
         OCcanvas.style.width = c_width
         d_playOnDifficult = difficult
         firstClick = true
+        field = new Array(rows / s_squareSize).fill().map(() => new Array(cols / s_squareSize).fill(0))
+        TFfield = new Array(rows).fill().map(() => new Array(cols).fill(false))
         setTimeout(drawCanvas,10)
     }
     console.log(d_playOnDifficult)
 }
 //fill square function 
-function fillHere(arr, color, size) {
+function fillHere(ctx, arr, color, size) {
     ctx.fillStyle = color;
     ctx.fillRect(arr[1] * size, arr[0] * size, size, size);
 }
 //fill text function
-function drawText(arr, color, text) {
-    ctx.font = '24px Arial';
-    ctx.fillStyle = color;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(text, arr[1] * s_squareSize + s_squareSize / 2, arr[0] * s_squareSize + s_squareSize / 2);
+function drawText(ctx, arr, color, text) {
+    ctx.font = `${s_FontSize}px Arial`
+    ctx.fillStyle = color
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.fillText(text, arr[1] * s_squareSize + s_squareSize / 2, arr[0] * s_squareSize + s_squareSize / 2)
 }
-//draw canvas 
+//get flag on cell
+function getFlagHere(arr, size){
+    const flagImg = new Image()
+    flagImg.src = i_flagSource
+    ctx.drawImage(flagImg,arr[1] * size, arr[0] * size, size, size)
+}
+//draw o_canvas 
 function drawCanvas(){
     const cols = parseInt(c_width) 
     const rows = parseInt(c_height)
+    o_canvas.width = cols
+    o_canvas.height = rows
     canvas.width = cols
     canvas.height = rows
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    octx.clearRect(0, 0, o_canvas.width, o_canvas.height);
     for(let i = 0; i < rows / s_squareSize; i++){
         for(let j = 0; j < cols / s_squareSize; j++){
-            fillHere([i,j],((i + j) % 2 === 0) ? c_evenSquareColor : c_oddSquareColor,s_squareSize)
-            if(TFfield[i][j]){
-                const defaultOpacity = ctx.globalAlpha
-                ctx.globalAlpha = 0.7
-                fillHere([i,j],'bisque',s_squareSize)
-                ctx.globalAlpha = 1.0
-                if(field[i][j] > 0){
-                    const color = colorPalette[field[i][j] - 1]
-                    drawText([i,j],color,`${field[i][j]}`)
-                }
-                ctx.globalAlpha = defaultOpacity
+            octx.save()
+            octx.globalAlpha = 0.6
+            fillHere(octx, [i,j],((i + j) % 2 === 0) ? c_evenSquareColor : c_oddSquareColor,s_squareSize)
+            if(TFfield[i][j] === 'Flag'){
+                getFlagHere([i,j],s_squareSize)
             }
+            else if(TFfield[i][j]){
+                ctx.globalAlpha = 0.7
+                fillHere(ctx, [i,j],'bisque',s_squareSize)
+                ctx.globalAlpha = 1.0
+                if(field[i][j] > 0 && TFfield[i][j]){
+                    const color = colorPalette[field[i][j] - 1]
+                    drawText(ctx,[i,j],color,`${field[i][j]}`)
+                }
+            }
+            octx.restore()
         }
     }
 }
@@ -130,7 +157,7 @@ const colorPalette = [
 let p_getMousePosition = []
 canvas.addEventListener('mousemove', (event) => {
     p_MouseIsOnCanvas = true
-    const rect = canvas.getBoundingClientRect();
+    const rect = o_canvas.getBoundingClientRect();
 
     const mouseX = event.clientX - rect.left 
     const mouseY = event.clientY - rect.top  
@@ -139,11 +166,11 @@ canvas.addEventListener('mousemove', (event) => {
     const cell = [Math.floor((mouseY + offset)/ s_squareSize),Math.floor((mouseX + offset) / s_squareSize)]
     p_getMousePosition = cell
     drawCanvas()
-    ctx.globalAlpha = 0.8
-    fillHere(cell,'gray',s_squareSize)
-    ctx.globalAlpha = 1.0
+    octx.globalAlpha = 0.8
+    fillHere(octx, cell,'gray',s_squareSize)
+    octx.globalAlpha = 1.0
 });
-//check if mouse is in the canvas or not
+//check if mouse is in the o_canvas or not
 let p_MouseIsOnCanvas = false
 canvas.addEventListener('mouseout', () => {
     p_MouseIsOnCanvas = false
@@ -256,10 +283,11 @@ function handleClickCell(){
 function handlePutFlag(){
     const i = p_getMousePosition[0];
     const j = p_getMousePosition[1];
-    if(!TFfield[i][j]){
-        TFfield[i][j] = true;
+    if(!TFfield[i][j] ){
+        TFfield[i][j] = 'Flag';
         drawCanvas();
-    } else {
+    } 
+    else if(TFfield[i][j] === 'Flag') {
         TFfield[i][j] = false;
         drawCanvas();
     }
