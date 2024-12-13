@@ -19,8 +19,9 @@ let c_oddSquareColor = 'aliceblue'
 let s_squareSize = 30
 //default font size
 let s_FontSize = 24
-//default flag image source
+//default image source
 const i_flagSource = './image/flag.png'
+const i_bombSource = './image/bomb.png'
 //default difficult
 let d_playOnDifficult = 'medium'
 //default field
@@ -34,6 +35,8 @@ bar.addEventListener('change',(event) => {
     const difficult = event.target.value
     getNewCanvas(difficult)
 })
+//default win lose
+let lose = false
 //get new o_canvas by change option
 let flags = 40
 function getNewCanvas(difficult){
@@ -86,6 +89,7 @@ function getNewCanvas(difficult){
         OCcanvas.style.width = c_width
         d_playOnDifficult = difficult
         firstClick = true
+        lose = false
         field = new Array(rows / s_squareSize).fill().map(() => new Array(cols / s_squareSize).fill(0))
         TFfield = new Array(rows).fill().map(() => new Array(cols).fill(false))
         setTimeout(drawCanvas,10)
@@ -111,6 +115,12 @@ function getFlagHere(arr, size){
     flagImg.src = i_flagSource
     ctx.drawImage(flagImg,arr[1] * size, arr[0] * size, size, size)
 }
+//get bomb on cell
+function getBombHere(arr, size){
+    const bombImg = new Image()
+    bombImg.src = i_bombSource
+    ctx.drawImage(bombImg,arr[1] * size, arr[0] * size, size, size)
+}
 //draw o_canvas 
 function drawCanvas(){
     const cols = parseInt(c_width) 
@@ -129,7 +139,7 @@ function drawCanvas(){
                 getFlagHere([i,j],s_squareSize)
             }
             else if(TFfield[i][j]){
-                ctx.globalAlpha = 0.7
+                ctx.globalAlpha = 0.1
                 fillHere(ctx, [i,j],'bisque',s_squareSize)
                 ctx.globalAlpha = 1.0
                 if(field[i][j] > 0 && TFfield[i][j]){
@@ -156,6 +166,7 @@ const colorPalette = [
 //get mouse move then light the square that under it
 let p_getMousePosition = []
 canvas.addEventListener('mousemove', (event) => {
+    if(lose) return
     p_MouseIsOnCanvas = true
     const rect = o_canvas.getBoundingClientRect();
 
@@ -241,6 +252,7 @@ function convertFirstClick(){
     }
 }
 canvas.addEventListener('click', () => {
+    if(lose) return
     if(firstClick){
         const i = p_getMousePosition[0]
         const j = p_getMousePosition[1]     
@@ -270,9 +282,30 @@ function handleClickCell(){
         if(field[i][j] === -1){
             //lose logic here
             console.log('you lose')
+            lose = true
+            const getBombPos = []
+            for(let a = 0; a < rows; a++){
+                for(let b = 0; b < cols; b++){
+                    if(field[a][b] === -1 && TFfield[a][b] != 'Flag')getBombPos.push([a,b])
+                    if(TFfield[a][b] === 'Flag' && field[a][b] != -1){
+                        ctx.globalAlpha = 0.6
+                        fillHere(ctx,[a,b],'red',s_squareSize)
+                        ctx.globalAlpha = 1.0
+                    }
+                }
+            }
+            const amount = getBombPos.length
+            alert(`you lose, there are ${amount} bomb${amount > 1 ? 's' : ''} left`)           
+            for (let z = 0; z < amount; z++) {
+                const ranPos = Math.floor(Math.random() * getBombPos.length)
+                const revealBombPos = getBombPos.splice(ranPos, 1)[0]
+                setTimeout(() => {
+                    getBombHere(revealBombPos, s_squareSize)
+                    console.log('get bomb')
+                }, z * 100)
+            }
         }
         else {
-            console.log(`${i},${j}`)
             revealCell(i,j)
             requestAnimationFrame(drawCanvas)
         }
