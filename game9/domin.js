@@ -394,3 +394,27 @@ function checkWin(){
     }
     return totalCells === 0
 }
+
+//addition for keyboard button
+document.addEventListener('keydown', (k) => {
+    if((k.key != 'x' && k.key != 'z') || !p_MouseIsOnCanvas) return
+    if(k.key === 'x'){
+        if(lose || win) return
+        if(firstClick){
+            const i = p_getMousePosition[0]
+            const j = p_getMousePosition[1]     
+            f_firstPosClick = p_getMousePosition
+            firstClick = false
+            initialClick()
+            revealCell(i,j)
+            requestAnimationFrame(drawCanvas)
+        }
+        else if(p_MouseIsOnCanvas){
+            f_firstPosClick = p_getMousePosition
+            handleClickCell()
+        }
+    }
+    else if(!firstClick && p_MouseIsOnCanvas){
+        handlePutFlag()
+    }
+});
