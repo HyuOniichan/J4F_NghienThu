@@ -1,7 +1,4 @@
-const o_canvas = document.getElementById('field')
-const octx = o_canvas.getContext('2d')
-//get canvas with full opacity
-const canvas = document.getElementById('fullOpacity')
+const canvas = document.getElementById('field')
 const ctx =  canvas.getContext('2d')
 //width,height of normal gamemode : 15 x 18 
 const container = document.getElementById('container')
@@ -9,8 +6,11 @@ let c_width = container.style.width
 let c_height = container.style.height
 c_width = '600px'
 c_height = '420px'
+//default image source
+const i_flagSource = './image/flag.png'
+const i_bombSource = './image/bomb.png'
 //default option contain
-let OCcanvas = document.getElementById('optionContainer')
+const OCcanvas = document.getElementById('optionContainer')
 OCcanvas.style.width = c_width
 //default square color
 let c_evenSquareColor = 'lightblue'
@@ -19,9 +19,6 @@ let c_oddSquareColor = 'aliceblue'
 let s_squareSize = 30
 //default font size
 let s_FontSize = 24
-//default image source
-const i_flagSource = './image/flag.png'
-const i_bombSource = './image/bomb.png'
 //default difficult
 let d_playOnDifficult = 'medium'
 //default field
@@ -35,10 +32,19 @@ bar.addEventListener('change',(event) => {
     const difficult = event.target.value
     getNewCanvas(difficult)
 })
+//default time
+const t_timePass = document.getElementById('time')
+let t_time = 0
+let timeInterval
 //default win lose
 let lose = false
-//get new o_canvas by change option
+let win = false
+//default flag
+const q_flagQuantity = document.getElementById('numflag')
 let flags = 40
+let tempFlag = flags
+let flagInterval
+//get new canvas by change option
 function getNewCanvas(difficult){
     switch(difficult){
         case 'easy' :
@@ -80,18 +86,21 @@ function getNewCanvas(difficult){
             break
     }
     if(difficult != 'yourMom'){
-        cols = parseInt(c_width) ;
-        rows = parseInt(c_height) ;   
-        o_canvas.width = cols
-        o_canvas.height = rows
-        canvas.style.width = c_width
-        canvas.style.height = c_height
+        tempFlag = flags
+        t_time = 0
+        clearInterval(timeInterval)
+        t_timePass.textContent = '000'
+        cols = parseInt(c_width) 
+        rows = parseInt(c_height) 
+        canvas.width = cols
+        canvas.height = rows
         OCcanvas.style.width = c_width
         d_playOnDifficult = difficult
         firstClick = true
         lose = false
+        win = false
         field = new Array(rows / s_squareSize).fill().map(() => new Array(cols / s_squareSize).fill(0))
-        TFfield = new Array(rows).fill().map(() => new Array(cols).fill(false))
+        TFfield = new Array(rows / s_squareSize).fill().map(() => new Array(cols / s_squareSize).fill(false))
         setTimeout(drawCanvas,10)
     }
     console.log(d_playOnDifficult)
@@ -110,36 +119,38 @@ function drawText(ctx, arr, color, text) {
     ctx.fillText(text, arr[1] * s_squareSize + s_squareSize / 2, arr[0] * s_squareSize + s_squareSize / 2)
 }
 //get flag on cell
-function getFlagHere(arr, size){
+function getFlagHere(ctx, arr, size){
     const flagImg = new Image()
     flagImg.src = i_flagSource
-    ctx.drawImage(flagImg,arr[1] * size, arr[0] * size, size, size)
+    ctx.globalAlpha = 1.0
+    ctx.drawImage(flagImg, arr[1] * size, arr[0] * size, size, size)
 }
 //get bomb on cell
 function getBombHere(arr, size){
     const bombImg = new Image()
     bombImg.src = i_bombSource
+    ctx.globalAlpha = 1.0
     ctx.drawImage(bombImg,arr[1] * size, arr[0] * size, size, size)
 }
-//draw o_canvas 
+//draw canvas 
 function drawCanvas(){
+    tempFlag = flags
     const cols = parseInt(c_width) 
     const rows = parseInt(c_height)
-    o_canvas.width = cols
-    o_canvas.height = rows
     canvas.width = cols
     canvas.height = rows
-    octx.clearRect(0, 0, o_canvas.width, o_canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     for(let i = 0; i < rows / s_squareSize; i++){
         for(let j = 0; j < cols / s_squareSize; j++){
-            octx.save()
-            octx.globalAlpha = 0.6
-            fillHere(octx, [i,j],((i + j) % 2 === 0) ? c_evenSquareColor : c_oddSquareColor,s_squareSize)
+            ctx.save()
+            ctx.globalAlpha = 0.6
+            fillHere(ctx, [i,j],((i + j) % 2 === 0) ? c_evenSquareColor : c_oddSquareColor,s_squareSize)
             if(TFfield[i][j] === 'Flag'){
-                getFlagHere([i,j],s_squareSize)
+                getFlagHere(ctx, [i,j],s_squareSize)
+                tempFlag--
             }
             else if(TFfield[i][j]){
-                ctx.globalAlpha = 0.1
+                ctx.globalAlpha = 0.5
                 fillHere(ctx, [i,j],'bisque',s_squareSize)
                 ctx.globalAlpha = 1.0
                 if(field[i][j] > 0 && TFfield[i][j]){
@@ -147,9 +158,10 @@ function drawCanvas(){
                     drawText(ctx,[i,j],color,`${field[i][j]}`)
                 }
             }
-            octx.restore()
+            ctx.restore()
         }
     }
+    q_flagQuantity.textContent = `${tempFlag}`
 }
 drawCanvas()
 // color palette base on numbers
@@ -164,31 +176,34 @@ const colorPalette = [
     '#adf7d1'
 ]
 //get mouse move then light the square that under it
-let p_getMousePosition = []
+let p_getMousePosition = [0,0]
+let frequency 
 canvas.addEventListener('mousemove', (event) => {
-    if(lose) return
+    if(lose || win) return
+    // clearTimeout(frequency)
+    // frequency = setTimeout(() => {},2)
     p_MouseIsOnCanvas = true
-    const rect = o_canvas.getBoundingClientRect();
-
+    const rect = canvas.getBoundingClientRect();
     const mouseX = event.clientX - rect.left 
     const mouseY = event.clientY - rect.top  
     const offset = -2.5 //for the mouse head
-
     const cell = [Math.floor((mouseY + offset)/ s_squareSize),Math.floor((mouseX + offset) / s_squareSize)]
-    p_getMousePosition = cell
-    drawCanvas()
-    octx.globalAlpha = 0.8
-    fillHere(octx, cell,'gray',s_squareSize)
-    octx.globalAlpha = 1.0
+    if(cell[0] != p_getMousePosition[0] || cell[1] != p_getMousePosition[1]){
+        p_getMousePosition = cell
+        drawCanvas()
+        ctx.globalAlpha = 0.8
+        fillHere(ctx, cell,'gray',s_squareSize)
+        ctx.globalAlpha = 1.0
+    }
 });
-//check if mouse is in the o_canvas or not
+//check if mouse is in the canvas or not
 let p_MouseIsOnCanvas = false
 canvas.addEventListener('mouseout', () => {
     p_MouseIsOnCanvas = false
 })
 
 function getNewField(){
-    cols = parseInt(c_width) /s_squareSize
+    cols = parseInt(c_width) / s_squareSize
     rows = parseInt(c_height) / s_squareSize
     field = new Array(rows).fill().map(() => new Array(cols).fill(0))
     TFfield = new Array(rows).fill().map(() => new Array(cols).fill(false))
@@ -215,7 +230,7 @@ function getNewField(){
             if(field[i][j] != -1 ) field[i][j] = checkAround(i,j)
         }
     }
-    console.log(field)
+    // console.log(field)
 }
 //get bomb around
 function checkAround(x,y){
@@ -237,6 +252,10 @@ let f_firstPosClick = [0,0]
 function initialClick(){
     getNewField()
     console.log(`first click at ${f_firstPosClick}`)
+    timeInterval = setInterval(() => {
+        t_time = Math.min(t_time + 1,999)
+        t_timePass.textContent = `${'0'.repeat(3 - String(t_time).length)}${t_time}`
+    }, 1000)
 }
 function convertFirstClick(){
     const x = f_firstPosClick[0]
@@ -252,7 +271,7 @@ function convertFirstClick(){
     }
 }
 canvas.addEventListener('click', () => {
-    if(lose) return
+    if(lose || win) return
     if(firstClick){
         const i = p_getMousePosition[0]
         const j = p_getMousePosition[1]     
@@ -261,7 +280,7 @@ canvas.addEventListener('click', () => {
         initialClick()
         revealCell(i,j)
         requestAnimationFrame(drawCanvas)
-        setTimeout(console.log(TFfield),10)
+        // setTimeout(console.log(TFfield),10)
     }
     else if(p_MouseIsOnCanvas){
         f_firstPosClick = p_getMousePosition
@@ -282,6 +301,7 @@ function handleClickCell(){
         if(field[i][j] === -1){
             //lose logic here
             console.log('you lose')
+            clearInterval(timeInterval)
             lose = true
             const getBombPos = []
             for(let a = 0; a < rows; a++){
@@ -295,7 +315,8 @@ function handleClickCell(){
                 }
             }
             const amount = getBombPos.length
-            alert(`you lose, there are ${amount} bomb${amount > 1 ? 's' : ''} left`)           
+            alert(`you lose`)     
+            console.log(`${amount} bomb${amount > 1 ? 's' : ''} left`)      
             for (let z = 0; z < amount; z++) {
                 const ranPos = Math.floor(Math.random() * getBombPos.length)
                 const revealBombPos = getBombPos.splice(ranPos, 1)[0]
@@ -308,6 +329,10 @@ function handleClickCell(){
         else {
             revealCell(i,j)
             requestAnimationFrame(drawCanvas)
+            if(checkWin()){
+                alert('you win')
+                clearInterval(timeInterval)
+            }
         }
     }
 }
@@ -316,14 +341,13 @@ function handleClickCell(){
 function handlePutFlag(){
     const i = p_getMousePosition[0];
     const j = p_getMousePosition[1];
-    if(!TFfield[i][j] ){
+    if(!TFfield[i][j] && tempFlag > 0){
         TFfield[i][j] = 'Flag';
-        drawCanvas();
     } 
     else if(TFfield[i][j] === 'Flag') {
         TFfield[i][j] = false;
-        drawCanvas();
     }
+    drawCanvas();
 }
 
 //handle all cells can be open
@@ -340,4 +364,33 @@ function revealCell(i,j){
             }
         }
     }
+}
+
+//remove tutorial after click
+const tutorial = document.getElementById('tutorial')
+const tutorStyle = document.querySelector('.removethis').style
+tutorial.addEventListener('click', () => {
+    tutorStyle.opacity = 0
+    tutorStyle.zIndex = '-3'
+})
+const infomation = document.getElementById('info')
+infomation.addEventListener('click', () => {
+    tutorStyle.opacity = 1
+    tutorStyle.zIndex = '4'
+})
+
+//function to check wwin
+function checkWin(){
+    cols = parseInt(c_width) / s_squareSize
+    rows = parseInt(c_height) / s_squareSize
+    console.log(`row: ${rows}, col: ${cols}`)
+    let totalCells = rows * cols - flags
+    for(let i = 0; i < rows; i++){
+        for(let j = 0; j < cols; j++){
+            if(TFfield[i][j] === true){
+                totalCells--
+            }
+        }
+    }
+    return totalCells === 0
 }
