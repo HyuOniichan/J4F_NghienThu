@@ -21,6 +21,8 @@ let s_squareSize = 30
 let s_FontSize = 24
 //default difficult
 let d_playOnDifficult = 'medium'
+//default show bomb delay
+let t_delayTimeShowBomb = 100
 //default field
 let rows = parseInt(c_width) /s_squareSize
 let cols = parseInt(c_height) / s_squareSize
@@ -48,9 +50,10 @@ let flagInterval
 function getNewCanvas(difficult){
     switch(difficult){
         case 'easy' :
-            flags = 20
+            flags = 10
             s_squareSize = 33
             s_FontSize = 28
+            t_delayTimeShowBomb = 160
             c_height = '396px'
             c_width = '396px'
             break
@@ -58,6 +61,7 @@ function getNewCanvas(difficult){
             flags = 40
             s_squareSize = 30
             s_FontSize = 24
+            t_delayTimeShowBomb = 100
             c_height = '420px'
             c_width = '600px'
             break
@@ -65,13 +69,15 @@ function getNewCanvas(difficult){
             flags = 99
             s_squareSize = 25
             s_FontSize = 20
+            t_delayTimeShowBomb = 70
             c_height = '500px'
             c_width = '600px'
             break
         case 'impossible' :
-            flags = 300
+            flags = 666
             s_squareSize = 15
             s_FontSize = 12
+            t_delayTimeShowBomb = 15
             c_height = '630px'
             c_width = '1035px'
             break
@@ -177,11 +183,8 @@ const colorPalette = [
 ]
 //get mouse move then light the square that under it
 let p_getMousePosition = [0,0]
-let frequency 
 canvas.addEventListener('mousemove', (event) => {
     if(lose || win) return
-    // clearTimeout(frequency)
-    // frequency = setTimeout(() => {},2)
     p_MouseIsOnCanvas = true
     const rect = canvas.getBoundingClientRect();
     const mouseX = event.clientX - rect.left 
@@ -201,7 +204,7 @@ let p_MouseIsOnCanvas = false
 canvas.addEventListener('mouseout', () => {
     p_MouseIsOnCanvas = false
 })
-
+//get new field for initial click
 function getNewField(){
     cols = parseInt(c_width) / s_squareSize
     rows = parseInt(c_height) / s_squareSize
@@ -299,7 +302,7 @@ function handleClickCell(){
     const j = p_getMousePosition[1]
     if(!TFfield[i][j]){
         if(field[i][j] === -1){
-            //lose logic here
+            //lose logic
             console.log('you lose')
             clearInterval(timeInterval)
             lose = true
@@ -314,17 +317,18 @@ function handleClickCell(){
                     }
                 }
             }
-            const amount = getBombPos.length
             alert(`you lose`)     
-            console.log(`${amount} bomb${amount > 1 ? 's' : ''} left`)      
-            for (let z = 0; z < amount; z++) {
+            console.log(`${getBombPos.length} bomb${getBombPos.length > 1 ? 's' : ''} left`)     
+            let showBombInterval = setInterval(() => {
+                if((!lose && !win) || getBombPos.length === 0){
+                    clearInterval(showBombInterval)
+                    return
+                }
                 const ranPos = Math.floor(Math.random() * getBombPos.length)
                 const revealBombPos = getBombPos.splice(ranPos, 1)[0]
-                setTimeout(() => {
-                    getBombHere(revealBombPos, s_squareSize)
-                    console.log('get bomb')
-                }, z * 100)
-            }
+                getBombHere(revealBombPos, s_squareSize)
+                console.log('get bomb')
+            }, t_delayTimeShowBomb)
         }
         else {
             revealCell(i,j)
@@ -336,7 +340,6 @@ function handleClickCell(){
         }
     }
 }
-
 //handle put flag
 function handlePutFlag(){
     const i = p_getMousePosition[0];
@@ -349,7 +352,6 @@ function handlePutFlag(){
     }
     drawCanvas();
 }
-
 //handle all cells can be open
 function revealCell(i,j){
     if(i < 0 || i >= rows || j < 0 || j >= cols) return
@@ -365,7 +367,6 @@ function revealCell(i,j){
         }
     }
 }
-
 //remove tutorial after click
 const tutorial = document.getElementById('tutorial')
 const tutorStyle = document.querySelector('.removethis').style
@@ -378,12 +379,10 @@ infomation.addEventListener('click', () => {
     tutorStyle.opacity = 1
     tutorStyle.zIndex = '4'
 })
-
 //function to check wwin
 function checkWin(){
     cols = parseInt(c_width) / s_squareSize
     rows = parseInt(c_height) / s_squareSize
-    console.log(`row: ${rows}, col: ${cols}`)
     let totalCells = rows * cols - flags
     for(let i = 0; i < rows; i++){
         for(let j = 0; j < cols; j++){
@@ -394,7 +393,6 @@ function checkWin(){
     }
     return totalCells === 0
 }
-
 //addition for keyboard button
 document.addEventListener('keydown', (k) => {
     if((k.key != 'x' && k.key != 'z') || !p_MouseIsOnCanvas) return
@@ -417,4 +415,9 @@ document.addEventListener('keydown', (k) => {
     else if(!firstClick && p_MouseIsOnCanvas){
         handlePutFlag()
     }
-});
+})
+//restart button
+document.getElementById('restart').addEventListener('click', () => {
+    getNewCanvas(d_playOnDifficult)
+    console.log('restart')
+})
