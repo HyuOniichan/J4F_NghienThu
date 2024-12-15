@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Do min</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="removethis" id="tutorial">
+        <img src="./image/tutorial.jpg" >
+    </div>
+    <div class="container" id="container">
+        <div id="quantities" class="quantities">
+            <img src="./image/flag.png" class="flag">
+            <p id="numflag">40</p>
+            <img src="./image/clock.png" class="clock">
+            <p id="time">000</p>
+        </div>
+        <canvas style="height: 40px; width: 600px ;background-color:#000;opacity: 0.9;" id="optionContainer"></canvas>
+        <select class="difficult" id="difficult">
+            <option style="color: yellow;" value="easy">Easy</option>
+            <option style="color: chocolate;" value="medium" selected>Medium</option>
+            <option style="color: crimson;" value="hard">Hard</option>
+            <option style="color: blueviolet;" value="impossible">Impossible</option>
+            <option style="color: lightseagreen;background-color: darkblue;" value="yourMom">Your Mom</option>
+        </select>
+        <img src="./image/info.png" class="info" id="info">
+        <button id="restart" class="restart">
+            <img src="./image/restart.png" style="width: 100%;">
+        </button>
+        <canvas id="field"></canvas>
+        <script src="domin.js"></script>
+    </div>
+</body>
+</html>
