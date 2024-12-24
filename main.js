@@ -3,6 +3,8 @@
 const $ = document.querySelector.bind(document);
 const $$ = document.querySelectorAll.bind(document);
 
+const searchInput = document.getElementById('search-input');
+
 const gameData = [
     {
         id: 1,
@@ -44,17 +46,27 @@ const gameData = [
         thumbnail: "./game5/image.png",
         link: "./game5/"
     },
+    {
+        id: 6,
+        name: "battle ship",
+        description: "ban tau tum lum",
+        creator: "Kiene",
+        thumbnail: "./game6/image.png",
+        link: "./game6/"
+    },
 ]
 
 const placeholdThumbnail = "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Placeholder_view_vector.svg/1022px-Placeholder_view_vector.svg.png?20220519031949"
 
 const gallery = $('#gallery');
 
+let query = '';
+
 renderGameGallery();
 function renderGameGallery() {
     gallery.innerHTML = gameData.map(game => {
         return `
-            <div class="card" style="width: 18rem; min-height: 286px;">
+            <div class="card" style="width: 18rem; min-height: 286px; ${checkDisplay(query, game) ? '' : 'display: none;'}">
                 <img src="${game.thumbnail ? game.thumbnail : placeholdThumbnail}" 
                     class="card-img-top" 
                     alt="game_image"
@@ -70,5 +82,20 @@ function renderGameGallery() {
         `
     }).join('');
 }
+
+
+// Search feature
+
+function checkDisplay(query, gameInfo) {
+    if (!query) return true; 
+    return gameInfo.name.toLowerCase().includes(query.toLowerCase()) ||
+        gameInfo.description.toLowerCase().includes(query.toLowerCase());
+}
+
+// Event listener for search input
+searchInput.addEventListener('input', () => {
+    query = searchInput.value;
+    renderGameGallery(); 
+});
 
 
