@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>300 Bai Code Thieu Nhi</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-color: black;
+            overflow: hidden;
+            /* background-image: url(''); */
+        }
+
+        .lockTask {
+            background-color: purple;
+        }
+
+        .taskContainer {
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        .taskBackground {
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            width: 200%;
+            z-index: -1;
+            opacity: 0.8;
+            transition: transform 0.3s ease-out;
+        }
+
+        .taskDifficult {
+            height: 40px;
+            width: 70%;
+            display: flex;
+            position: absolute;
+            left: 15%;
+            top: 15%;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .starDiv {
+            position: relative;
+            width: 100px;
+            height: 50px;
+            border-radius: 10px;
+            transition: transform 0.3 ease
+        }
+
+        .star {
+            position: relative;
+            width: 70px;
+            height: auto;
+            left: 15px;
+            top: -10px;
+        }
+        #description {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 600px;
+            height: 400px;
+            background: rgb(2,0,36);
+            background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(28,40,120,1) 24%, rgba(0,212,255,0.616) 80%);
+        }
+        .textFont {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 20px;
+        }
+        .buttonContainer {
+            height: 40px;
+            width: 30%;
+            display: flex;
+            position: absolute;
+            left: 35%;
+            bottom: 10%;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .rollButton {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 160px;
+            height: 40px;
+            border-radius: 10px;
+            transition: transform 0.3 ease;
+            z-index: 0;
+        }
+        #gachaVid {
+            position: absolute;
+            visibility: hidden;
+            top: 0px;
+            left: 0px;
+            z-index: -2;
+            width: 100%;
+            height: auto;
+        }
+        .taskScreen {
+            position: absolute;
+            opacity: 0.8;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            opacity: 0;
+            background-color: white;
+            transition: background-color 2s;
+        }
+        .cardContain {
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            align-items: center;
+            top: 20%;
+            width: 100%;
+            height: auto;
+        }
+        .card {
+            position: relative;
+            height: 400px;
+            width: 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background-color: aqua;
+            border-radius: 5px;
+            border: white 2px solid;
+            /* gap: 1px; */
+        }
+        .inCard {
+            width: 100%;
+            height: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            border-bottom: black 2px solid;
+        }
+        .inCardimg {
+            height: 100%;
+            width: auto;
+            top: 50%;
+            left: 50%;
+            /* transform: translate(-50%, -50%); */
+        }
+        .cardTag {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: auto;
+            height: 30px;
+            border-radius: 5px;
+            background-color:greenyellow;
+        }
+        .columns {
+            display: grid;
+            grid-template-columns: auto auto auto ;
+            height: auto;
+        }
+        .title {
+            max-height: 50px;
+        }
+        #decision {
+            position: absolute;
+            bottom: 10%;
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            align-items: center;
+            width: 100%;
+            height: auto;
+        }
+        #decision button {
+            position: relative;
+            width: 100px;
+            height: 50px;
+            border-radius: 10px;
+            transition: transform 0.3 ease;
+        }
+        #accepted {
+            background-color: green;
+        }
+        #declined {
+            background-color: red;
+        }
+
+        .zoom {
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a style="color: blue;">300 Bai <br>Code Thieu Nhi</a>
+            <ul class="navbar-nav">
+                <li><a href="..">Home</a></li>
+                <li><a href="../Task/">Tasks</a></li>
+                <li><a href="#">Get Task</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div id="taskContainer">
+        <img id="taskBackground" class="taskBackground" src="./image/background.png">
+        <div id="taskDifficult" class="taskDifficult">
+            <div class="starDiv zoom" style="background-color: blue;" id="sd0">
+                <img src="./image/copperStar.png" alt="copperStar" class="star">
+            </div>
+            <div class="starDiv" style="background-color: purple;" id="sd1">
+                <img src="./image/silverStar.png" alt="silverStar" class="star">
+            </div>
+            <div class="starDiv" style="background-color: red;" id="sd2">
+                <img src="./image/goldStar.png" alt="goldStar" class="star">
+            </div>
+            <div class="starDiv" style="background-color: coral;" id="sd3">
+                <img src="./image/fullStar.png" alt="fullStar" class="star">
+            </div>
+        </div>
+        <div id="description" class="textFont">
+            Difficult : Easy <br>
+            total task: 300 <br>
+            available task: ? <br>
+        </div>
+    </div>
+    <div class="buttonContainer">
+        <button class="rollButton textFont" id="x1button" style="background-color: gray;">Roll X1</button>
+        <button class="rollButton textFont" id="x3button" style="background-color: crimson;">Roll X3</button>
+    </div>
+    <video id="gachaVid" muted>
+        <source src="./video/gacha.mp4" type="video/mp4">
+    </video>
+    <div id="taskScreen" class="taskScreen">
+        <div class="cardContain" id="cardContain">
+            <!-- <div class="card">
+                <div class="inCard" style="background-color: silver; height: 100px;">
+                    <img class="inCardimg" src="./image/fullStar.png">
+                </div>
+                <div class="inCard textFont">
+                    <h3>Name of the task</h3>
+                </div>
+                <div class="inCard textFont" >
+                    <span class="cardTag">Tag</span>
+                    <span class="cardTag">Tag</span>
+                    <span class="cardTag">Tag</span>
+                    <span class="cardTag">Tag</span>
+                </div>
+                <div class="inCard textFont" >
+                    description <br>
+                    description <br>
+                    description <br>
+                </div>
+                <div class="inCard" style="justify-content: left;">
+                    <input placeholder="Solution" id="userInput">
+                    <span style="color: red;"> invalid input </span>
+                </div>
+                <div class="inCard textFont" >
+                    <input placeholder="Rate from 1 to 5" disabled>
+                    <button id="rate" disabled>Rate</button>
+                </div>
+                <div class="inCard textFont" >
+                    <button id="linkTask" class="cardTag" style="width: 100px; height: auto; ">
+                        Go To Problem
+                    </button>
+                </div>
+            </div> -->
+        </div>
+        <div id="decision">
+            <button id="accepted" disabled>Accept</button>
+            <button id="declined" disabled>Decline</button>
+        </div>
+    </div>
+    <script src="random.js" type="module"></script>
+    <script src="../tasks.js" type="module"></script>
+</body>
+
+</html>

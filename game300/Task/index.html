@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>300 Bai Code Thieu Nhi</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        .allTask {
+            position: absolute;
+            top: 70px;
+            width: 100%;
+            height: auto;
+            background-color: bisque;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 1px;
+            justify-content: center;
+            text-align: center;
+        }
+        .falseTask {
+            background-color: red;
+        }
+        .trueTask {
+            background-color: green;
+        }
+        .inProgressTask {
+            background-color: yellow;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a style="color: blue;">300 Bai <br>Code Thieu Nhi</a>
+            <ul class="navbar-nav">
+                <li><a href="..">Home</a></li>
+                <li><a href="#">Tasks</a></li>
+                <li><a href="../GetTask/">Get Task</a></li>
+            </ul>
+        </div>
+    </nav>
+    <div id="allTask" class="allTask"></div>
+    <script src="../code.js" type="module"></script>
+    <script src="../tasks.js" type="module"></script>
+</body>
+</html>
