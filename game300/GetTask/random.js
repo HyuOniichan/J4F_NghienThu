@@ -31,10 +31,20 @@ const saveLockTask = () => {
 const saveAvail = () => {
     localStorage.setItem('available', JSON.stringify(available));
 };
-loadTasks()
-loadAvail()
-loadLockTask()
-
+const initial = () => {
+    loadTasks()
+    loadAvail()
+    loadLockTask()
+    available =
+    [
+        {difficult: 'easy' , available: `${tasks[0].filter(item => !item.isDone).length}`},
+        {difficult: 'medium' , available: `${tasks[1].filter(item => !item.isDone).length}`},
+        {difficult: 'hard' , available: `${tasks[2].filter(item => !item.isDone).length}`},
+        {difficult: 'all' , available: `${tasks.reduce((all,current) => {return all + current.filter(item => !item.isDone).length}, 0)}`}
+    ]
+    saveAvail()
+}
+initial()
 const imageDiv = document.querySelectorAll('.starDiv')
 const background = document.getElementById('taskBackground')
 const description = document.getElementById('description')
