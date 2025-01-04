@@ -155,6 +155,8 @@ function validInput(input, target) {
 }
 
 function handleShowTasks(times) {
+    const navbar = document.querySelector('.navbar')
+    navbar.style.display = 'block'
     scrtask.style.zIndex = '2'
     scrtask.style.opacity = '0.8'
     scrtask.style.backgroundColor = 'black'
@@ -211,7 +213,7 @@ function handleShowTasks(times) {
                 </div>
                 <div class="inCard" >
                     <input placeholder="Solution" class="userInput" disabled>
-                    <button class="confirmInput" style="color: red; background-color: green;" disabled> upload </button>
+                    <button class="confirmInput" style="color: lime; background-color: brown;" disabled> upload </button>
                 </div>
                 <div class="inCard textFont" >
                     <input class="rateInput" placeholder="Rate from 1 to 5" disabled>

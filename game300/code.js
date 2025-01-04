@@ -28,7 +28,8 @@ const renderTasks = () => {
         taskDiv.classList = `${task.isDone}Task`
         taskDiv.textContent = `Task ${task.index + 1} difficult ${task.difficult}`
         taskDiv.addEventListener('click', () => {
-            console.log(`task id:${task.index} , difficult: ${task.difficult}, status: ${task.isDone ? (task.isDone === true) ? 'completed' : 'inProgress' : 'uncomplete' }`)
+            console.log(`task id:${task.index} , difficult: ${task.difficult}, status: ${task.isDone ? (task.isDone === true) ? 'completed' : 'inProgress' : 'uncomplete' },
+                solution: ${task.solution}, star Rate: ${task.rate}`)
         });
         taskList.appendChild(taskDiv);
     });})
