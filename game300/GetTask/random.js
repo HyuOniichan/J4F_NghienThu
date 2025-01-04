@@ -99,26 +99,31 @@ else{
             console.log('play video')
             console.log(`current difficult roll: ${difficulty}`)
             times = button.id[1] - '0'
+            console.log(`total tasks request: ${times}`)
             getTasks = []
             for(let i = 0; i < times; i++){
+                console.log('run normal')
                 let rand = Math.floor(Math.random() * avail) + 1
                 console.log(rand)
                 let tempTask
                 let chosenTasks
                 let position = 0
+                // console.log('run normal')
                 if(offset === 3){
                     const index = Math.floor(rand / 300)
                     rand %= 300
                     chosenTasks = tasks[index]
                 }
                 else chosenTasks = tasks[offset]
+                // console.log('run normal')
                 while(rand){
                     if(!chosenTasks[position].isDone){
                         rand--
                         tempTask = chosenTasks[position]
-                        position++
                     }
+                    position++
                 }
+                // console.log('run normal')
                 getTasks.push(tempTask)
             }
             console.log('get task:')
