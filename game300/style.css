@@ -1,0 +1,52 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+.navbar {
+    background-color:aqua; /* Background color of the navbar */
+    color: white; /* Text color */
+    position: fixed; /* Fix the navbar at the top */
+    top: 0; /* Position it at the top */
+    left: 0; /* Align it to the left */
+    width: 100%; /* Full width */
+    height: 40px;
+    padding: 10px 0; /* Padding for the navbar */
+    z-index: 1000; /* Ensure it stays above other content */
+}
+
+.container {
+    max-width: 1200px; /* Max width for the content */
+    margin: 0 auto; /* Center the content */
+    display: flex; /* Use flexbox for layout */
+    justify-content: space-between; /* Space between items */
+    align-items: center; /* Center items vertically */
+}
+
+.navbar-nav {
+    list-style: none; /* Remove bullet points */
+    padding: 0; /* Remove padding */
+    margin: 0; /* Remove margin */
+    display: flex; /* Use flexbox for layout */
+}
+
+.navbar-nav li {
+    margin-left: 20px; /* Space between links */
+}
+
+.navbar-nav a {
+    color:black; /* Link color */
+    text-decoration: none; /* Remove underline */
+    padding: 5px 10px; /* Padding for links */
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 22px;
+}
+
+.navbar-nav a:hover {
+    background-color:coral; /* Background color on hover */
+}
+
+.content {
+    margin-top: 60px; /* Space for the fixed navbar */
+    padding: 20px; /* Padding for content */
+}
