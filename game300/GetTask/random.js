@@ -76,6 +76,7 @@ if(lockTask.length > 0){
     handleShowTasks(lockTask.length)
 }
 else{
+    scrtask.style.backgroundColor = 'white'
     let difficulty = 'easy'
     let avail = available[0].available
     let offset = 0
@@ -87,22 +88,28 @@ else{
             image.classList.add('zoom')
             offset = image.id[2] - '0' 
             background.style.transform = `translateX(${0 - 450 * offset}px)`
+            description.classList.remove(`${difficulty}Gradient`)
             avail = available[offset].available
             switch(offset){
                 case 0:
                     difficulty = 'easy'
+                    document.documentElement.style.backgroundColor = 'rgba(28,40,120,1)'
                     break
                 case 1:
                     difficulty = 'medium'
+                    document.documentElement.style.backgroundColor = 'rgba(118,40,156,1)'
                     break
                 case 2:
                     difficulty = 'hard'
+                    document.documentElement.style.backgroundColor = 'rgba(156,40,53,1)'
                     break
                 default:
                     difficulty = 'all'
+                    document.documentElement.style.backgroundColor = 'rgba(181,104,83,1)'
             }
-            description.innerText = `
-            difficult : ${difficulty} 
+            description.classList.add(`${difficulty}Gradient`)
+            description.innerText =
+            `difficult : ${difficulty} 
             total task : ${difficulty === 'all' ? 900 : 300}
             available task : ${avail}
             `
@@ -292,7 +299,9 @@ function handleShowTasks(times) {
         })
         rateButton.addEventListener('click', () => {
             rateButton.remove()
+            arr.isLock = true
             inputRate.disabled = true
+            newDiv.querySelector('.removeTask').remove()
             tasks[getDifficult][getIndex].isDone = true
             tasks[getDifficult][getIndex].solution = input.value.trim()
             tasks[getDifficult][getIndex].rate = Math.floor(inputRate.value.trim())
@@ -320,7 +329,6 @@ function handleShowTasks(times) {
             tasks[getDifficult][getIndex].isDone = 'inProgress'
             arr.isLock = true
             arr.isDone = 'inProgress'
-            newDiv.querySelector('.removeTask').addEventListener('click', (event) => handleRemoveTask(event, arr))
         })
         lockTask = [...getTasks]
         saveLockTask()

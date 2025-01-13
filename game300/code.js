@@ -32,16 +32,23 @@ const saveAvail = () => {
 };
 
 /* DANGER! For fix bugs only, please only modify it if you know what you are doing */
-const fixbug = 0
+// const fixbug = 0
 /* DANGER! For fix bugs only, please only modify it if you know what you are doing */
-
+let showDifficult = 'all'
+let showStatus = 'all'
+let showInput = []
 const renderTasks = () => {
     const taskList = document.getElementById('allTask');
     taskList.innerHTML = ''; // Clear existing tasks
     tasks.forEach(task => {task.forEach( task => {
-        if(fixbug) {task.isDone = false
-        task.isLock = false
-        saveTasks()}
+        // if(fixbug) {task.isDone = false
+        // task.isLock = false
+        // saveTasks()}
+        if(showInput.length > 0) {
+            if(!handleSearch(task)) return
+        }
+        if(showDifficult != 'all' && task.difficult != showDifficult) return
+        if(showStatus != 'all' && task.isDone != showStatus) return 
         const taskDiv = document.createElement('div');
         taskDiv.style.height = '60px'
         taskDiv.style.width = 'auto'
@@ -65,7 +72,7 @@ const renderLockTask = () => {
 lockTask = []
 tasks.forEach(taskss => {taskss.forEach(task => {task.isLock ? lockTask.push(task) : ''} )})
 saveLockTask()
-console.log(lockTask)
+// console.log(lockTask)
 }
 renderLockTask()
 /* */
@@ -97,35 +104,31 @@ function getTaskCard(arr) {
     } 
     // let getDifficult = (difficult === 'easy') ? 0 : (difficult === 'medium') ? 1 : 2
     let tagsLine = ''
-    let maxAmount = 3;
     arr.tag.split('   ').forEach(tag => {
-        if((maxAmount && tag.length <= 10) || maxAmount === 3) {
-            tagsLine += `<span class="cardTag">${tag}</span>\n`
-            maxAmount--
-        }
+        tagsLine += `<span class="cardTag">${tag}</span>\n`
     })
     const newDiv = document.createElement('div')
     // <span class="cardTag">Tag</span>
     newDiv.innerHTML = `
     <div class="card">
-        <div class="inCard" style="background-color: ${color}; height: 100px;">
+        <div class="inCard" style="background-color: ${color}; height: 150px;">
             <img class="inCardimg" src=${img}>
         </div>
         <div class="inCard textFont title" >
             <strong>${arr.name}</strong>
         </div>
-        <div class="inCard textFont columns">
+        <div class="textFont columns">
             ${tagsLine}
         </div>
-        <div class="inCard textFont">
+        <div class="inCard textFont" style="font-size: 30px;">
             Difficult: ${difficult} <br>
             Coin: ${arr.coin} <br>
             ${note}
         </div>
-        <div class="inCard" >
+        <div class="inCard" style="font-size: 30px;">
             Solution: <a ${(arr.isDone) ? `href="${arr.solution}" target="_blank"` : ''}>${(!arr.isDone) ? 'not yet' : (arr.isDone === true) ? 'go to solution' : 'in Progress'}</a>
         </div>
-        <div class="inCard textFont" >
+        <div class="inCard textFont" style="font-size: 30px;">
             Star Rate: ${arr.rate}
         </div>
         <div class="inCard textFont" >
@@ -183,3 +186,61 @@ function handleScreenClick() {
     taskScreen.style.opacity = '0'
     cardContain.innerHTML = ''
 }
+
+document.getElementById('progressFilter').addEventListener('change', () => {
+    const value = document.getElementById('progressFilter').value
+    switch(value) {
+        case 'trueTasks': 
+            showStatus = true
+            break
+        case 'falseTasks': 
+            showStatus = false
+            break
+        case 'inProgressTasks': 
+            showStatus = 'inProgress'
+            break
+        default:
+            showStatus = 'all'
+    }
+    console.log(`filter status: ${showStatus}`)
+    renderTasks()
+})
+
+document.getElementById('difficultFilter').addEventListener('change', () => {
+    showDifficult = document.getElementById('difficultFilter').value
+    console.log(`filter difficult: ${showDifficult}`)
+    renderTasks()
+})
+
+document.getElementById('getSearch').addEventListener('click', getInput)
+
+function getInput() {
+    showInput = document.getElementById('searchInput').value.trim().toLowerCase().split(/\s+/)
+    console.log(showInput)
+    renderTasks()
+}
+
+function handleSearch(task) {
+    const name = task.name;
+    const tags = task.tag.split(/\s+/).map(tag => tag.toLowerCase());
+    const nameMatches = name.startsWith(showInput.join(' '))
+    const tagsMatch = showInput.every(tag => tags.some(t => t.startsWith(tag.toLowerCase())));
+    return nameMatches || tagsMatch;
+}
+
+let instantSearch = false
+document.getElementById('instantSearch').addEventListener('click', () => {
+    instantSearch = !instantSearch
+    if(instantSearch){
+        document.getElementById('instantSearch').style.backgroundColor = 'mediumpurple' 
+        document.getElementById('searchInput').addEventListener('input', getInput)
+        document.getElementById('getSearch').removeEventListener('click', getInput)
+        getInput()
+        renderTasks()
+    }
+    else {
+        document.getElementById('instantSearch').style.backgroundColor = 'white' 
+        document.getElementById('searchInput').removeEventListener('input', getInput)
+        document.getElementById('getSearch').addEventListener('click', getInput)
+    }
+})

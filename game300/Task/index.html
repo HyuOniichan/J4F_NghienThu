@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>300 Bai Code Thieu Nhi</title>
     <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="../../colorPalette.css">
     <style>
         .allTask {
             position: absolute;
@@ -43,28 +44,35 @@
             font-family: Arial, Helvetica, sans-serif;
             font-size: 20px;
         }
-        .cardContain {
-            position: fixed;
-            display: flex;
-            justify-content: center;
-            gap: 50px;
-            align-items: center;
-            top: 20%;
-            left: calc(50% - 140px);
-            width: auto;
+        .columns {
+            display: grid;
+            gap: 2px;
+            grid-template-columns: repeat(3, 1fr);
             height: auto;
+            width: 100%;
+            border-bottom: black 2px solid;
         }
         .card {
             position: relative;
-            height: 400px;
-            width: 280px;
+            height: 600px;
+            width: 420px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             background-color: aqua;
             border-radius: 5px;
             border: white 2px solid;
-            /* gap: 1px; */
+        }
+        .cardContain {
+            position: fixed;
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            align-items: center;
+            top: 10%;
+            left: calc(50% - 210px);
+            width: auto;
+            height: auto;
         }
         .inCard {
             width: 100%;
@@ -83,14 +91,65 @@
             /* transform: translate(-50%, -50%); */
         }
         .cardTag {
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: auto;
-            height: 30px;
             border-radius: 5px;
             background-color:greenyellow;
+            text-align: center;
+        }
+        .title {
+            max-height: 50px;
+        }
+        #taskSearch select {
+            border-radius: 5px;
+        }
+        #searchInput {
+            border: 2px black solid;
+            border-radius: 11px;
+            width: 240px;
+        }
+        #searchInput:focus {
+            outline: none;
+            animation: rainbowBorder 1s infinite;
+        }
+        @keyframes rainbowBorder {
+            0% { border-color:  red; }
+            14% { border-color: orange; }
+            28% { border-color: yellow; }
+            42% { border-color: green; }
+            57% { border-color: blue; }
+            71% { border-color: indigo; }
+            85% { border-color: violet; }
+            100% { border-color: red; }
+        }
+        #getSearch {
+            top: 2px;
+            height: 16px;
+            width: auto;
+            transition: transform 0.1s ease;
+        }
+        #getSearch:hover {
+            transform: scale(1.2);
+        }
+        #instantSearch {
+            border: 1px black solid;
+            border-radius: 3px;
+            height: 20px;
+            width: 20px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .description {
+            position: fixed;
+            top: 5px;
+            translate: 50%;
+            opacity: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            font-size: 10px;
+            transition: opacity 0.2s;
+        }
+        #instantSearch:hover .description {
+            opacity: 0.6;
         }
     </style>
 </head>
@@ -98,6 +157,26 @@
     <nav class="navbar">
         <div class="container">
             <a style="color: blue;">300 Bai <br>Code Thieu Nhi</a>
+            <div id="taskSearch">
+                <select id="progressFilter" class="ghostwhitebg">
+                    <option class="rainbowbg" value="all" selected>Status</option>
+                    <option class="redbg" value="falseTasks">incomplete</option>
+                    <option class="yellowbg" value="inProgressTasks">in progress</option>
+                    <option class="greenbg" value="trueTasks">complete</option>
+                </select>
+                <select id="difficultFilter" class="yellowgreenbg">
+                    <option class="rainbowbg" value="all" selected>Difficult</option> 
+                    <option class="aquabg" value="easy">Easy</option>
+                    <option class="violetbg" value="medium">Medium</option>
+                    <option class="orangebg" value="hard">Hard</option>
+                </select>
+                <input type="text" id="searchInput" placeholder="Search for tasks...">
+                <img src="./image/search.png" alt="search" id="getSearch">
+                <button id="instantSearch">
+                    <img src="./image/fast.png" style="height: 100%;">
+                    <div class="description">search in real time</div>
+                </button>
+            </div>
             <ul class="navbar-nav">
                 <li><a href="..">Home</a></li>
                 <li><a href="#">Tasks</a></li>
