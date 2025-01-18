@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gravity Chess - Level</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-color:bisque;
+        }
+        #initialImages {
+            position: absolute;
+        }
+        #initialImages img {
+            width: 50px;
+            height: auto;
+            z-index: -1;
+            opacity: 0;
+            position: absolute;
+        }
+        #board {
+            border: 2px solid #000;
+            display: grid;
+            grid-template-columns: auto;
+            opacity: 1.0;
+            background-color: #f0f0f0;
+        }
+        .rowDiv {
+            display: flex;
+            width: 100%;
+            height: auto;
+        }
+        .rowDiv div {
+            position: relative;
+            transition: transform 0.1s;
+        }
+        .cell {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            z-index: 1;
+        }
+        .chessImg {
+            position: absolute;
+            width: 80%;
+            height: auto;
+            top: 10%;
+            left: 10%;
+        }
+        .chessImg2 {
+            position: absolute;
+            width: 100%;
+            height: auto;
+            /* top: 10%;
+            left: 10%; */
+        }
+        .circleImg {
+            position: absolute;
+            width: 60%;
+            height: auto;
+            top: 20%;
+            left: 20%;
+            z-index: 1;
+            animation: flick 1.5s infinite;
+        }
+        @keyframes flick {
+            0% {opacity: 0.5;}
+            50% {opacity: 0.8;}
+            100% {opacity: 0.5;}
+        }
+        .back {
+            height: 50px;
+            width: auto;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 5;
+        }
+        #promote {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            z-index: -1;
+            opacity: 0;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0,0,0,0.7);
+            transition: opacity 0.2s ease;
+        }
+        #availablePiece {
+            height: 200px;
+            width: 750px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(181, 226, 18, 0.8);
+            z-index: 4;
+            /* pointer-events: none; */
+        }
+        #availablePiece img {
+            height: 100px;
+            width: auto;
+            transition: all 0.1s ease;
+            margin: 10px;
+        }
+        #availablePiece img:hover {
+            transform: scale(1.2);
+            filter: drop-shadow(1px 1px 20px red);
+        }
+        #preventClick {
+            z-index: -3;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        #availablePiece .eye {
+            position: absolute;
+            top: calc(50% - 110px);
+            right: calc(50% - 375px);
+            width: 30px;
+            height: auto;
+        }
+        #menu {
+            position: absolute;
+            width: 500px;
+            height: 300px;
+            top: calc(50% - 150px);
+            left: calc(50% - 250px);
+            z-index: 3;
+            border: 5px black solid;
+            border-radius: 20px;
+            background-color: aqua;
+            display: grid;
+            grid-template-columns: auto;
+        }
+        .inMenu {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        .inMenu.title {
+            font-size: 40px;
+            color: red;
+        }
+        .inMenu.summary {
+            text-align: center;
+            font-size: 24px;
+            color: green;
+        }
+        .inMenu.decision {
+            overflow: hidden;
+            text-align: center;
+        }
+        .inMenu.decision img{
+            height: 70px;
+            width: auto;
+        }
+        .inMenu.decision img:hover {
+            transform: scale(1.2);
+            /* opacity: 0; */
+        }
+    </style>
+</head>
+<body>
+    <a href=".." id="redirect"><img src="../../image/back.png" alt="goback" class="back"></a>
+    <h2 id="levelName"></h2>
+    <div id="preventClick">
+        
+    </div>
+    <div id="promote">
+        <div id="availablePiece">
+
+        </div>
+    </div>
+    <div id="initialImages">
+        <img src="../../image/wall.png">
+        <img src="../../image/bishop.png">
+        <img src="../../image/enemy.png">
+        <img src="../../image/king.png">
+        <img src="../../image/knight.png">
+        <img src="../../image/pawn.png">
+        <img src="../../image/play.png">
+        <img src="../../image/queen.png">
+        <img src="../../image/rook.png">
+        <img src="../../image/space.png">
+        <img src="../../image/wall.png">
+    </div>
+    <div id="board"></div>
+    <script src="./lvl.js" type="module"></script>
+    <script src="../levels.js" type="module"></script>
+</body>
+</html>

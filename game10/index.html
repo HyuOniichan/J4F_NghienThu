@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gravity Chess</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-color:bisque;
+        }
+        #gameContainer {
+            height: 720px;
+            width: 720px;
+            background-color: aquamarine;
+            border: 2px black solid;
+            border-radius: 5px;
+            display: grid;
+            grid-template-rows: auto auto;
+        }
+        .redirect {
+            height: 80px;
+            transition: transform 0.3s ease;
+        }
+        .zoom {
+            transform: scale(1.2);
+        }
+
+        .buttons {
+            display: grid;
+            justify-content: center;
+            grid-template-columns: auto;
+        }
+        .buttons img {
+            transition: transform 0.2s ease;
+            height: 100px;
+            width: auto;
+        }
+        .buttons img:hover {
+            transform: scale(1.2);
+        }
+
+        .gameName {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            max-height: 200px;
+            font-size: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div class="gameName">
+            Gravity Chess
+        </div>
+        <div class="buttons">
+            <a href="./build/"><img src="./image/build.png"></a>
+            <a href="./play/"><img src="./image/play.png"></a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gravity chess - Build</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-color:bisque;
+        }
+        div {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 14px;
+        }
+        .board {
+            border: 2px solid #000;
+            display: block;
+            opacity: 1.0;
+            background-color: #f0f0f0;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+        .container {
+            position: relative;
+            width: 720px;
+            height: 720px;
+            background-color: burlywood;
+        }
+        #canvasContainer {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+        }
+        .pieces {
+            position: absolute;
+            display: flex;
+            width: 100%;
+            min-width: 500px;
+            height: 100px;
+            bottom: 0px;
+            left: 0px;
+            align-items: center;
+            background-color: chocolate;
+        }
+        .chesspieces {
+            padding: 10px;
+            height: 40px;
+            width: auto;
+        }
+        .zoom {
+            transform: scale(1.2);
+        }
+        .currentPiece {
+            position: absolute;
+            background-color: chartreuse;
+            top: 25px;
+            right: 25px;
+            width: 80px;
+            height: 80px;
+        }
+        .chosen {
+            position: absolute;
+            top: 10%;
+            right: 10%;
+            width: 80%;
+        }
+        .arrow {
+            position: absolute;
+            height: 60px;
+            width: 60px;
+        }
+        #updown {
+            position: absolute;
+            top: 120px;
+            right: 35px;
+            width: 50px;
+            height: 120px;
+        }
+        #rightleft {
+            position: absolute;
+            top: 160px;
+            right: 5px;
+            width: 120px;
+            height: 50px;
+        }
+        #boardHeight {
+            position: absolute;
+            top: 0%;
+            right: 50%;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 36px;
+            color: cornflowerblue;
+            transition: color 0.2s ease-in;
+        }
+        #boardWidth {
+            position: absolute;
+            top: 3%;
+            right: 33%;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 36px;
+            color: yellow;
+            transition: color 0.2s ease-in;
+        }
+        .saveEdit {
+            position: absolute;
+            top: 360px;
+            right: 25px;
+            width: 80px;
+            height: 80px;
+        }
+        #save {
+            width: 100%;
+            height: auto;
+        }
+        .resetBoard {
+            position: absolute;
+            top: 500px;
+            right: 25px;
+            width: 80px;
+            height: 80px;
+        }
+        #reset {
+            width: 100%;
+            height: auto;
+        }
+        #goback {
+            position: absolute;
+            left: calc(50% - 420px);
+            top: 10px;
+        }
+        #goback img {
+            width: 50px;
+            height: auto;
+        }
+        .playTest {
+            position: absolute;
+            top: 260px;
+            right: 10px;
+            width: 80px;
+            height: 80px;
+        }
+    </style>
+</head>
+<body>
+    <a href="..">
+        <div id="goback">
+            <img src="../image/back.png" alt="goback">
+        </div>
+    </a>
+    <div id="container" class="container">
+        <div id="canvasContainer">
+            <canvas id="board" class="board"></canvas>
+        </div>
+        <div id="currentPiece" class="currentPiece">
+            <img src="../image/pawn2.png" alt="pawn" class="chosen">
+        </div>
+        <div class="saveEdit">
+            <img id="save" src="../image/save.png" alt="save" class="zoomable" >
+            <div>Save And Copy Board</div>
+        </div>
+        <div class="resetBoard">
+            <img id="reset" src="../image/reset.png" alt="reset" class="zoomable" >
+            <div>Reset Board</div>
+        </div>
+        <div class="playTest">
+            <a href="../play/level/?custom"><img src="../image/playtest.png" style="width: 50px;"> </a>
+            <div>test game</div>
+        </div>
+        <span id="modifyBoard">
+            <div id="updown">
+                <p id="boardHeight"></p>
+                <img id="up" src="../image/up.png" alt="up" class="arrow zoomable" style="top: 0px;width: 40px; height: auto;" >
+                <img id="down" src="../image/down.png" alt="down" class="arrow zoomable" style="bottom: 0px;width: 40px; height: auto;" >
+            </div>
+            <div id="rightleft">
+                <p id="boardWidth"></p>
+                <img id="left" src="../image/left.png" alt="left" class="arrow zoomable" style="left: 0px; height: 40px; width: auto;" >
+                <img id="right" src="../image/right.png" alt="right" class="arrow zoomable" style="right: 0px; height: 40px; width: auto;" >
+            </div>
+        </span>
+        <div id="pieces" class="pieces">
+            <img src="../image/pawn2.png" alt="pawn" class="chesspieces zoomable">
+            <img src="../image/rook.png" alt="rook" class="chesspieces zoomable">
+            <img src="../image/knight.png" alt="knight" class="chesspieces zoomable">
+            <img src="../image/bishop.png" alt="bishop" class="chesspieces zoomable">
+            <img src="../image/queen.png" alt="queen" class="chesspieces zoomable">
+            <img src="../image/king.png" alt="king" class="chesspieces zoomable">
+            <img src="../image/wall.png" alt="wall" class="chesspieces zoomable" >
+            <img src="../image/space.png" alt="space" class="chesspieces zoomable" >
+            <img src="../image/pedestal.png" alt="pedestal" class="chesspieces zoomable" >
+            <img src="../image/enemy.png" alt="enemy" class="chesspieces zoomable" >
+        </div>
+    </div>
+    <script src="create.js" type="module"></script>
+    <script src="../play/levels.js" type="module"></script>
+</body>
+</html>
