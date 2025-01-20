@@ -1,5 +1,3 @@
-
-
 /*game level */
 import {games as rizz} from "../levels.js"
 let games = rizz
@@ -13,20 +11,56 @@ function saveLevel() {
 
 getLevel()
 /* get current level */
-let board
+let board = [],extraBoard = [], specialBoard = []
 const url = new URL(window.location.href)
 const levelIndex = Number(url.search.replace(/\D/g, ''))
+let currentLevel
 if(levelIndex) {
-    const currentLevel = games[levelIndex - 1]
+    currentLevel = games[levelIndex - 1]
+    console.log('level info:')
+    console.log(currentLevel)
     document.getElementById('levelName').innerText = `Level: ${levelIndex}`
-    debug(currentLevel)
-    board = currentLevel.level.map(row => {return row.slice()})
+    board = currentLevel.level.map(row => row.map(row => {return row.slice()}))
 }
 else {
     document.getElementById('redirect').href = '../../build/'
-    alert(games[25].message)
-    board = games[25].level.map(row => {return row.slice()})
+    // alert(games[25].message)
+    board = games[25].level.map(row => row.map(row => {return row.slice()}))
 }
+let tempBoard = []
+const defaultPieces = ['pawn','pawn2','rook','knight','bishop','queen','king','enemy',0]
+const extraPieces = ['wall','pedestal']
+board.forEach(row => {
+    let tempRow = [], tempExtra = [],tempSpecial = []
+    row.forEach(arr => {
+        let p1 = 0,p2 = 0, p3 = 0
+        arr.forEach(value => {
+            if(defaultPieces.includes(value)) {
+                tempRow.push(value)
+                p1 = 1
+            }
+            else if(extraPieces.includes(value)){
+                tempExtra.push(value)
+                p2 = 2
+            }
+            else {
+                tempSpecial.push(value)
+                p3 = 3
+            }
+        })
+        if(!p1) tempRow.push(0)
+        if(!p2) tempExtra.push(0)
+        if(!p3) tempSpecial.push(0)
+    })
+    tempBoard.push(tempRow)
+    extraBoard.push(tempExtra)
+    specialBoard.push(tempSpecial)
+})
+board = []
+board = tempBoard.map(arr => arr.slice())
+// console.log(board)
+// console.log(extraBoard)
+// console.log(specialBoard)
 /* common function */
 function debug(m){
     console.trace(m)
@@ -40,9 +74,13 @@ const divBoard = document.getElementById('board')
 let w_boardWidth = board[0].length
 let h_boardHeight = board.length
 //default square size
-let s_squareSize = 600 / h_boardHeight
+let s_squareSize = Math.min((600 / h_boardHeight),(1300 / w_boardWidth))
 // starting move
 let Moves = 0
+//default check on pad
+let onPad = false
+//default has key in board
+let hasKey = true
 //modify board size
 divBoard.style.width = `${s_squareSize * w_boardWidth}px`
 divBoard.style.height = `${s_squareSize * h_boardHeight}px`
@@ -54,13 +92,19 @@ const isChessPiece = (piece) => {
     const pieces = ['pawn','pawn2','rook','knight','bishop','queen','king']
     return pieces.includes(piece)
 }
-const cantMoveThrough = (piece) => {
-    const objects = ['wall']
-    return objects.includes(piece) || isChessPiece(piece)
+const cantMoveThrough = (i,j) => {
+    const piece = board[i][j]
+    const piece2 = extraBoard[i][j]
+    const piece3 = specialBoard[i][j]
+    const objects = ['wall','lockblock','triggerblock']
+    return objects.includes(piece2) || objects.includes(piece3) || isChessPiece(piece)
 }
-const solidStand = (piece) => {
-    const objects = ['wall', 'pedestal']
-    return objects.includes(piece) || isChessPiece(piece)
+const solidStand = (i,j) => {
+    const piece = board[i][j]
+    const piece2 = extraBoard[i][j]
+    const piece3 = specialBoard[i][j]
+    const objects = ['wall','pedestal','lockblock','triggerblock']
+    return objects.includes(piece2) || objects.includes(piece3) || isChessPiece(piece)
 }
 /* get all enemies position */
 let enemies = []
@@ -81,6 +125,11 @@ function arrEqual(arr1,arr2) {
 /*draw board */
 function drawBoard() {
     divBoard.innerHTML = ''
+    const checkpad = checkOnpad()
+    const isChange = (onPad != checkpad)
+    onPad = checkpad
+    if(hasKey) {checkGotKey()}
+    if(isChange) console.log(`pad is trigger to ${onPad}`)
     for(let i = 0; i < h_boardHeight; i++) {
         const childDiv = document.createElement('div')
         childDiv.classList = 'rowDiv'
@@ -102,6 +151,23 @@ function drawBoard() {
                     currentPiece = (isChessPiece(board[i][j])) ? (board[i][j] === 'pawn2') ? 'pawn' : board[i][j] : currentPiece
                     handlePieceClick(i,j)
                 })
+            }
+            if(extraBoard[i][j]) {
+                const ex = extraBoard[i][j]
+                const extraDiv = document.createElement('div')
+                extraDiv.classList = 'cell'
+                extraDiv.innerHTML = `<img src="../../image/${ex}.png" alt="${ex}" class="chessImg2"> `
+                newDiv.append(extraDiv)
+            }
+            if(specialBoard[i][j]) {
+                if((specialBoard[i][j] === 'triggerblock' || specialBoard[i][j] === 'untriggerblock') && isChange) {
+                    specialBoard[i][j] = (specialBoard[i][j] === 'triggerblock') ? 'untriggerblock' : 'triggerblock'
+                }
+                const ex = specialBoard[i][j]
+                const extraDiv = document.createElement('div')
+                extraDiv.classList = 'cell'
+                extraDiv.innerHTML = `<img src="../../image/${ex}.png" alt="${ex}" class="chessImg2"> `
+                newDiv.append(extraDiv)
             }
             childDiv.append(newDiv)
         }
@@ -126,7 +192,7 @@ function handlePieceClick(i,j) {
         while(direction.length > 0) {
             const direct = direction.shift()
             row = i + direct[0], col = j + direct[1]
-            while(satisfy() && !cantMoveThrough(board[row][col])) {
+            while(satisfy() && !cantMoveThrough(row,col)) {
                 getCircle(row,col)
                 row += direct[0]
                 col += direct[1]
@@ -138,7 +204,7 @@ function handlePieceClick(i,j) {
         while(direction.length > 0) {
             const direct = direction.shift()
             row = i + direct[0], col = j + direct[1]
-            while(satisfy() && !cantMoveThrough(board[row][col])) {
+            while(satisfy() && !cantMoveThrough(row,col)) {
                 getCircle(row,col)
                 row += direct[0]
                 col += direct[1]
@@ -165,7 +231,7 @@ function handlePieceClick(i,j) {
         case 'knight' :
             const narr = [[i+2,j-1],[i+2,j+1],[i+1,j-2],[i+1,j+2],[i-2,j-1],[i-2,j+1],[i-1,j-2],[i-1,j+2]]
             narr.forEach(pos => {
-                if(pos[0] >= 0 && pos[0] < h_boardHeight && pos[1] >= 0 && pos[1] < w_boardWidth && cantMoveThrough(board[pos[0]][pos[1]])) return
+                if(pos[0] >= 0 && pos[0] < h_boardHeight && pos[1] >= 0 && pos[1] < w_boardWidth && cantMoveThrough(pos[0],pos[1])) return
                 getCircle(pos[0],pos[1])
             })
             break
@@ -179,7 +245,7 @@ function handlePieceClick(i,j) {
         case 'king' :
             for(row = i - 1; row <= i + 1; row++) {
                 for(col = j - 1; col <= j + 1; col++) {
-                    if(satisfy() && !cantMoveThrough(board[row][col])) getCircle(row,col)
+                    if(satisfy() && !cantMoveThrough(row,col)) getCircle(row,col)
                 }
             }
             break
@@ -199,17 +265,19 @@ function handlePieceClick(i,j) {
             }
             board[i][j] = 0
             board[pos[0]][pos[1]] = currentPiece
-            currentPiece = ''
             drawBoard()
             checkPromote(pos[0],pos[1])
-            checkGravity()
+            handleTeleport(pos[0],pos[1]) 
+            currentPiece = ''
+            requestAnimationFrame(checkGravity)
         })
     })
 }
 
 function getCircle(i,j) {
     const nextDiv = document.getElementById(`p${i}${j}`)
-    if(!nextDiv) return
+    const notGoToThis = ['untriggerblock']
+    if(!nextDiv || notGoToThis.includes(specialBoard[i][j])) return
     const circleImg = new Image()
     circleImg.src = (checkTakeEnemy(i,j)) ? '../../image/circleRed.png' : '../../image/circle.png'
     circleImg.alt = 'movehere'
@@ -231,7 +299,7 @@ function checkGravity() {
                     to: [],
                 }
                 current = board[row][j]
-                while(!solidStand(current)) {
+                while(!solidStand(row,j)) {
                     anim = true
                     seg.to = [row,j]
                     row++
@@ -250,6 +318,7 @@ function checkGravity() {
     // console.log(movement)
     getAnimation(movement)
 }
+checkGravity()
 
 function getAnimation(arr) {
     if(arr.length === 0) {
@@ -343,7 +412,7 @@ function checkWin() {
     }, 20)
     if(levelIndex) setTimeout(() => {
         const screen = document.getElementById('preventClick')
-        let summary = `total moves: ${(currentLevel.leastMove === 0 || currentLevel.leastMove > Moves) ? `${Moves} (new highscore!)` : `${Moves} (highscore: ${currentLevel.leastMove})`}`
+        let summary = `total moves: ${(games[id].leastMove === 0 || games[id].leastMove > Moves) ? `${Moves} (new highscore!)` : `${Moves} (highscore: ${games[id].leastMove})`}`
         screen.style.zIndex = 3
         screen.innerHTML = 
         `
@@ -366,7 +435,8 @@ function checkWin() {
             </div>
         </div>
         `
-        games[id].leastMove = (games[id].leastMove) ? Moves : Math.min(games[id].leastMove, Moves)
+        console.log(`current highscore: ${games[id].leastMove}, total move: ${Moves}`)
+        games[id].leastMove = (games[id].leastMove) ? Math.min(games[id].leastMove, Moves) : Moves
         games[id].isDone = true
         if(id < 25 && games[id+5].isLock) {
             games[id+5].isLock = false
@@ -374,6 +444,62 @@ function checkWin() {
         }
         saveLevel()
     },500)
+}
+
+function checkOnpad() {
+    for(let i = 0; i < h_boardHeight; i++) {
+        for(let j = 0; j < w_boardWidth; j++) {
+            if(isChessPiece(board[i][j]) && specialBoard[i][j] === 'pad') {
+                specialBoard[i][j] = 'onpad'
+            }
+            if(!isChessPiece(board[i][j]) && specialBoard[i][j] === 'onpad') {
+                specialBoard[i][j] = 'pad'
+            }
+        }
+    }
+    return specialBoard.flat(2).includes('onpad')
+}
+
+function checkGotKey() {
+    for(let i = 0; i < h_boardHeight; i++) {
+        for(let j = 0; j < w_boardWidth; j++) {
+            if(isChessPiece(board[i][j]) && specialBoard[i][j] === 'key') {
+                specialBoard[i][j] = 0
+                console.log('key taken!')
+                specialBoard = specialBoard.map(arr => arr.map(cell => {return (cell === 'lockblock') ? 0 : cell}))
+                hasKey = false
+                setTimeout(checkGravity,10)
+                console.log(specialBoard)
+                return
+            }
+        }
+    }
+}
+
+function handleTeleport(row,col) {
+    if(specialBoard[row][col] != 'teleport' || !board[row][col]) return 
+    const size = w_boardWidth * h_boardHeight
+    let set = {
+        from: [row,col],
+        to: []
+    }
+    // console.log(`max Width: ${w_boardWidth}, max Height: ${h_boardHeight}, current piece: ${currentPiece}`)
+    for(let p = row * w_boardWidth + col + 1; p < size * 2; p++) {
+        const i = Math.floor((p % size) / w_boardWidth)
+        const j = (p % size) % w_boardWidth
+        if(specialBoard[i][j] === 'teleport') {
+            set.to = [i,j]
+            break
+        }
+    }
+    if(set.to.length  > 0) {
+        const fromDiv = document.getElementById(`p${set.from[0]}${set.from[1]}`)
+        const toDiv = document.getElementById(`p${set.to[0]}${set.to[1]}`)
+        const child = fromDiv.firstChild
+        board[set.from[0]][set.from[1]] = 0
+        board[set.to[0]][set.to[1]] = currentPiece
+        toDiv.insertBefore(child, toDiv.firstChild)
+    }
 }
 /* debug games */
 // games = [
@@ -565,13 +691,7 @@ function checkWin() {
 //     },
 //     {
 //         message: 'custom level',
-//         level: [
-//             [0, 0, 0, 0, 0],
-//             [0, 0, 0, 0, 0],
-//             [0, 0, 0, 0, 0],
-//             [0, 0, 0, 0, 0],
-//             [0, 0, 0, 0, 0],
-//         ],
+//         level: [[[0]]],
 //     }
 // ]
 // saveLevel()

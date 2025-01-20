@@ -19,13 +19,11 @@
             font-size: 14px;
         }
         .board {
-            border: 2px solid #000;
-            display: block;
             opacity: 1.0;
             background-color: #f0f0f0;
-            position: absolute;
-            top: 20px;
-            left: 20px;
+            /* position: absolute; */
+            /* top: 20px;
+            left: 20px; */
         }
         .container {
             position: relative;
@@ -37,21 +35,26 @@
             position: absolute;
             width: 600px;
             height: 600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .pieces {
             position: absolute;
             display: flex;
+            flex-wrap: wrap;
             width: 100%;
             min-width: 500px;
-            height: 100px;
+            height: 120px;
             bottom: 0px;
             left: 0px;
             align-items: center;
             background-color: chocolate;
+            overflow: hidden;
         }
         .chesspieces {
-            padding: 10px;
-            height: 40px;
+            padding: 5px;
+            height: 50px;
             width: auto;
         }
         .zoom {
@@ -186,7 +189,7 @@
             </div>
         </span>
         <div id="pieces" class="pieces">
-            <img src="../image/pawn2.png" alt="pawn" class="chesspieces zoomable">
+            <img src="../image/pawn2.png" alt="pawn2" class="chesspieces zoomable">
             <img src="../image/rook.png" alt="rook" class="chesspieces zoomable">
             <img src="../image/knight.png" alt="knight" class="chesspieces zoomable">
             <img src="../image/bishop.png" alt="bishop" class="chesspieces zoomable">
@@ -195,6 +198,12 @@
             <img src="../image/wall.png" alt="wall" class="chesspieces zoomable" >
             <img src="../image/space.png" alt="space" class="chesspieces zoomable" >
             <img src="../image/pedestal.png" alt="pedestal" class="chesspieces zoomable" >
+            <img src="../image/lockblock.png" alt="lockblock" class="chesspieces zoomable" >
+            <img src="../image/key.png" alt="key" class="chesspieces zoomable" >
+            <img src="../image/pad.png" alt="pad" class="chesspieces zoomable" >
+            <img src="../image/triggerblock.png" alt="triggerblock" class="chesspieces zoomable" >
+            <img src="../image/untriggerblock.png" alt="untriggerblock" class="chesspieces zoomable" >
+            <img src="../image/teleport.png" alt="teleport" class="chesspieces zoomable" >
             <img src="../image/enemy.png" alt="enemy" class="chesspieces zoomable" >
         </div>
     </div>
