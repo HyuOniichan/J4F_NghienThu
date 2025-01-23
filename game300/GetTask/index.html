@@ -14,9 +14,8 @@
             justify-content: center;
             align-items: center;
             flex-direction: column;
-            background-color: black;
+            background-color: rgba(28,40,120,1);
             overflow: hidden;
-            /* background-image: url(''); */
         }
 
         .lockTask {
@@ -35,7 +34,7 @@
             top: 0px;
             width: 200%;
             z-index: -1;
-            opacity: 0.8;
+            opacity: 0.6;
             transition: transform 0.3s ease-out;
         }
 
@@ -71,8 +70,24 @@
             align-items: center;
             width: 600px;
             height: 400px;
+            transition: background 0.5s ease;
+            border: 2px black solid;
+        }
+        .easyGradient {
             background: rgb(2,0,36);
-            background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(28,40,120,1) 24%, rgba(0,212,255,0.616) 80%);
+            background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(28,40,120,1) 30%, rgba(0,212,255,0.616) 80%);
+        }
+        .mediumGradient {
+            background: rgb(2,0,36);
+            background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(118,40,156,1) 30%, rgba(89,21,247,0.616) 80%);
+        }
+        .hardGradient {
+            background: rgb(2,0,36);
+            background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(156,40,53,1) 30%, rgba(227,247,21,0.616) 80%);
+        }
+        .allGradient {
+            background: rgb(22,96,204);
+            background: linear-gradient(90deg, rgba(22,96,204,0.9472382703081232) 0%, rgba(128,22,163,0.8968181022408963) 41%, rgba(247,58,21,0.846) 90%);
         }
         .textFont {
             font-family: Arial, Helvetica, sans-serif;
@@ -117,7 +132,7 @@
             height: 100%;
             z-index: -2;
             opacity: 0;
-            background-color: white;
+            background-color: black;
             transition: background-color 2s;
         }
         .cardContain {
@@ -140,7 +155,6 @@
             background-color: aqua;
             border-radius: 5px;
             border: white 2px solid;
-            /* gap: 1px; */
         }
         .inCard {
             width: 100%;
@@ -168,13 +182,13 @@
             border-radius: 5px;
             background-color:greenyellow;
         }
+        .title {
+            max-height: 50px;
+        }
         .columns {
             display: grid;
             grid-template-columns: auto auto auto ;
             height: auto;
-        }
-        .title {
-            max-height: 50px;
         }
         #decision {
             position: absolute;
@@ -198,6 +212,48 @@
         }
         #declined {
             background-color: red;
+        }
+        .skip {
+            height: 40px;
+            position: absolute;
+            top: 0%;
+            right: 0%;
+            opacity: 0.6;
+            z-index: -3;
+            display: none;
+        }
+        .lock {
+            position: absolute;
+            top: 0;
+            right: 0;
+            height: 25px;
+            width: 25px;
+        }
+        .lockImg {
+            height: 25px;
+            width: 25px;
+            position: relative;
+            opacity: 0.7;
+        }
+        .lockDescription {
+            position: absolute;
+            bottom: 25px;
+            left: 150%;
+            width: 150px;
+            font-size: 10px;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px; 
+            border-radius: 5px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .lock:hover .lockDescription {
+            opacity: 1;
+        }
+        .lock:hover .lockImg {
+            opacity: 1;
         }
 
         .zoom {
@@ -233,7 +289,7 @@
                 <img src="./image/fullStar.png" alt="fullStar" class="star">
             </div>
         </div>
-        <div id="description" class="textFont">
+        <div id="description" class="textFont easyGradient">
             Difficult : Easy <br>
             total task: 300 <br>
             available task: ? <br>
@@ -246,6 +302,7 @@
     <video id="gachaVid" muted>
         <source src="./video/gacha.mp4" type="video/mp4">
     </video>
+    <img src="./image/skip.png" class="skip">
     <div id="taskScreen" class="taskScreen">
         <div class="cardContain" id="cardContain">
             <!-- <div class="card">

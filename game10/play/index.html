@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gravity chess - Play</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-color:bisque;
+        }
+        .container {
+            position: relative;
+            width: 720px;
+            height: 720px;
+            background-color: aquamarine;
+            border: 3px black solid;
+            border-radius: 5px;
+        }
+        #goback {
+            position: absolute;
+            left: calc(50% - 420px);
+            top: 10px;
+        }
+        #goback img {
+            width: 50px;
+            height: auto;
+        }
+        #title {
+            position: relative;
+            top: 0px;
+            width: 100%;
+            height: 50px;
+            font-size: 36px;
+            background-color: chocolate;
+            user-select: none;
+        }
+        #levels {
+            position: relative;
+            display: grid;
+            grid-template-columns: repeat(5, auto);
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 600px;
+        }
+        .inLevel {
+            height: 90px;
+            width: 90px;
+            margin: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: cornflowerblue;
+            border: 5px plum solid;
+            border-radius: 5px;
+            font-size: 36px;
+            font-family: Arial, Helvetica, sans-serif;
+            user-select: none;
+        }
+        .inLevel img {
+            width: 50px;
+            height: auto;
+        }
+
+        .hoverZoom {
+            transition: transform 0.1s ease-out;
+        }
+        .hoverZoom:hover {
+            transform: scale(1.1);
+        }
+
+        #board {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            z-index: -1;
+        }
+
+        .description {
+            position: fixed;
+            top: -5px;
+            /* translate: 50%; */
+            opacity: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            font-size: 10px;
+            transition: opacity 0.2s;
+        }
+        #levels div:hover .description {
+            opacity: 0.8;
+        }
+        .linkLvl {
+            text-decoration: none; /* Remove underline */
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <a href="..">
+        <div id="goback">
+            <img src="../image/back.png" alt="goback">
+        </div>
+    </a>
+    <div id="container" class="container">
+        <div id="title">Levels</div>
+        <div id="levels">
+        </div>
+        <canvas id="board"></canvas>
+    </div>
+    <script src="game.js" type="module"></script>
+    <script src="levels.js" type="module"></script>
+</body>
+</html>

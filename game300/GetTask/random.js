@@ -31,6 +31,12 @@ const saveLockTask = () => {
 const saveAvail = () => {
     localStorage.setItem('available', JSON.stringify(available));
 };
+const renderLockTask = () => {
+    lockTask = []
+    tasks.forEach(taskss => {taskss.forEach(task => {task.isLock ? lockTask.push(task) : ''} )})
+    saveLockTask()
+    console.log(lockTask)
+}
 const initial = () => {
     loadTasks()
     loadAvail()
@@ -51,16 +57,26 @@ const description = document.getElementById('description')
 const gachaVid = document.getElementById('gachaVid')
 const scrtask = document.getElementById('taskScreen')
 const cardContain = document.getElementById('cardContain')
+
+const skip = document.querySelector('.skip')
+skip.addEventListener('click', () => {
+    gachaVid.currentTime = gachaVid.duration
+})
+
 let eventListen = true
+let shouldAddEvent = false
 let getTasks = []
 if(lockTask.length > 0){
     eventListen = false
+    shouldAddEvent = true
+    console.log(`total tasks in progress: ${lockTask.length}`)
     lockTask.forEach(task => {
         getTasks.push(task)
     })
     handleShowTasks(lockTask.length)
 }
 else{
+    scrtask.style.backgroundColor = 'white'
     let difficulty = 'easy'
     let avail = available[0].available
     let offset = 0
@@ -72,22 +88,28 @@ else{
             image.classList.add('zoom')
             offset = image.id[2] - '0' 
             background.style.transform = `translateX(${0 - 450 * offset}px)`
+            description.classList.remove(`${difficulty}Gradient`)
             avail = available[offset].available
             switch(offset){
                 case 0:
                     difficulty = 'easy'
+                    document.documentElement.style.backgroundColor = 'rgba(28,40,120,1)'
                     break
                 case 1:
                     difficulty = 'medium'
+                    document.documentElement.style.backgroundColor = 'rgba(118,40,156,1)'
                     break
                 case 2:
                     difficulty = 'hard'
+                    document.documentElement.style.backgroundColor = 'rgba(156,40,53,1)'
                     break
                 default:
                     difficulty = 'all'
+                    document.documentElement.style.backgroundColor = 'rgba(181,104,83,1)'
             }
-            description.innerText = `
-            difficult : ${difficulty} 
+            description.classList.add(`${difficulty}Gradient`)
+            description.innerText =
+            `difficult : ${difficulty} 
             total task : ${difficulty === 'all' ? 900 : 300}
             available task : ${avail}
             `
@@ -134,14 +156,24 @@ else{
             gachaVid.style.zIndex = '2'
             gachaVid.currentTime = 0
             gachaVid.play()
+            gachaVid.addEventListener('click', skipGachaVid)
         })
     })
     gachaVid.addEventListener('ended', () => {
         gachaVid.style.visibility = 'hidden'
         gachaVid.style.zIndex = '-2'
+        skip.style.display = 'none'
+        skip.style.zIndex = -3
         handleShowTasks(times)
     })
 }
+
+function skipGachaVid() {
+    skip.style.display = 'block'
+    skip.style.zIndex = 3
+    gachaVid.removeEventListener('click', skipGachaVid)
+}
+
 function validInput(input, target) {
     console.log(input)
     let temp = input.slice(30,undefined).split('/')
@@ -162,6 +194,7 @@ function handleShowTasks(times) {
     scrtask.style.backgroundColor = 'black'
     for(let i = 0; i < times; i++){
         const arr = getTasks[i]
+        console.log(arr)
         let difficult,img, color,note
         let getIndex = arr.index
         switch(arr.difficult){
@@ -197,6 +230,10 @@ function handleShowTasks(times) {
             // <span class="cardTag">Tag</span>
             newDiv.innerHTML = `
             <div class="card">
+                <div class="lock removeTask">
+                    <img src="./image/lock.png" class="lockImg">
+                    <div class="lockDescription">remove task (skill issue only)</div>
+                </div>
                 <div class="inCard" style="background-color: ${color}; height: 100px;">
                     <img class="inCardimg" src=${img}>
                 </div>
@@ -220,12 +257,14 @@ function handleShowTasks(times) {
                     <button class="rateButton" disabled>Rate!</button>
                 </div>
                 <div class="inCard textFont" >
-                    <button class="cardTag linkTask" style="width: 100px; height: auto; ">
+                    <button class="cardTag linkTask" style="width: 100%; height: auto; ">
                         Go To Problem
                     </button>
                 </div>
             </div>
             `
+            
+        if(shouldAddEvent) newDiv.querySelector('.removeTask').addEventListener('click', (event) => handleRemoveTask(event, arr))
         newDiv.querySelector('.linkTask').addEventListener('click', () => {
             window.open(arr.link, '_blank')
         })
@@ -255,12 +294,14 @@ function handleShowTasks(times) {
         confirmInput.addEventListener('click', () => {
             confirmInput.remove()
             input.disabled = true
-            rateButton.disabled = false
             inputRate.disabled = false
             saveTasks()
         })
         rateButton.addEventListener('click', () => {
             rateButton.remove()
+            arr.isLock = true
+            inputRate.disabled = true
+            newDiv.querySelector('.removeTask').remove()
             tasks[getDifficult][getIndex].isDone = true
             tasks[getDifficult][getIndex].solution = input.value.trim()
             tasks[getDifficult][getIndex].rate = Math.floor(inputRate.value.trim())
@@ -307,4 +348,12 @@ function handleShowTasks(times) {
         document.getElementById('declined').disabled = true
         getTasks = []
     })
+}
+function handleRemoveTask(event, arr) {
+    const index = (arr.difficult === 'easy') ? 0 : (arr.difficult === 'medium') ? 1 : 2
+    alert(`task removed by skill issue user who can't even solve ${index ? 'a' : 'an'} ${arr.difficult} task`)
+    tasks[index][arr.index].isLock = false
+    saveTasks()
+    renderLockTask()
+    location.reload()
 }
