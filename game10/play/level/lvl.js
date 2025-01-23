@@ -17,6 +17,10 @@ const levelIndex = Number(url.search.replace(/\D/g, ''))
 let currentLevel
 if(levelIndex) {
     currentLevel = games[levelIndex - 1]
+    if(currentLevel.isLock) {
+        alert('the level is currently lock, pls no cheating')
+        window.location.href = '..'
+    }
     console.log('level info:')
     console.log(currentLevel)
     document.getElementById('levelName').innerText = `Level: ${levelIndex}`
@@ -75,12 +79,20 @@ let w_boardWidth = board[0].length
 let h_boardHeight = board.length
 //default square size
 let s_squareSize = Math.min((600 / h_boardHeight),(1300 / w_boardWidth))
+//support div height
+document.getElementById('support').style.height = `${h_boardHeight * s_squareSize}px`
+//edit support content
+document.getElementById('reload').addEventListener('click', () => {location.reload()})
+//default animation delay in millisecond
+const animationDelay = 123
 // starting move
 let Moves = 0
 //default check on pad
 let onPad = false
 //default has key in board
 let hasKey = true
+//default piece on teleport
+let isOnTp = false
 //modify board size
 divBoard.style.width = `${s_squareSize * w_boardWidth}px`
 divBoard.style.height = `${s_squareSize * h_boardHeight}px`
@@ -106,11 +118,49 @@ const solidStand = (i,j) => {
     const objects = ['wall','pedestal','lockblock','triggerblock']
     return objects.includes(piece2) || objects.includes(piece3) || isChessPiece(piece)
 }
-/* get all enemies position */
-let enemies = []
+/* cycle structure */ 
+class Node {
+    constructor(value) {
+        this.value = value; 
+        this.next = null; 
+    }
+}
+class cycleList {
+    constructor() {
+        this.head = null; 
+        this.tail = null; 
+    }
+    push(value) {
+        const newNode = new Node(value);
+        if (!this.head) {
+            this.head = newNode
+            this.tail = newNode
+            newNode.next = this.head
+        } else {
+            this.tail.next = newNode
+            this.tail = newNode
+            this.tail.next = this.head
+        }
+    }
+    findNext(value) {
+        let temp = this.tail
+        do {
+            temp = temp.next
+            const val = temp.value
+            if(val[0] === value[0] && val[1] === value[1]) {
+                return temp.next.value
+            }
+            
+        } while(temp.next != this.head)
+        return 0
+    }
+}
+/* get all enemies and teleports position */
+let enemies = [],teleports = new cycleList()
 for(let i = 0; i < h_boardHeight; i++) {
     for(let j = 0; j < w_boardWidth; j++) {
         if(board[i][j] === 'enemy') enemies.push([i,j])
+        if(specialBoard[i][j] === 'teleport') teleports.push([i,j])
     }
 }
 function checkTakeEnemy(i,j) {
@@ -128,8 +178,8 @@ function drawBoard() {
     const checkpad = checkOnpad()
     const isChange = (onPad != checkpad)
     onPad = checkpad
-    if(hasKey) {checkGotKey()}
     if(isChange) console.log(`pad is trigger to ${onPad}`)
+    // isOnTp = checkPieceOnTeleport()
     for(let i = 0; i < h_boardHeight; i++) {
         const childDiv = document.createElement('div')
         childDiv.classList = 'rowDiv'
@@ -139,9 +189,9 @@ function drawBoard() {
             newDiv.style.width = `${s_squareSize}px`
             newDiv.style.height = `${s_squareSize}px`
             newDiv.style.backgroundColor = color
-            newDiv.id = `p${i}${j}`
+            newDiv.id = `p${i}_${j}`
             if(board[i][j]) {
-                newDiv.innerHTML = `<div class="cell"><img src="../../image/${board[i][j]}.png" alt="${board[i][j]}" class="chessImg${isChessPiece(board[i][j]) ? '' : '2'}"></div> `
+                newDiv.innerHTML = `<div class="cell"><img src="../../image/${board[i][j]}.png" alt="${board[i][j]}" class="chessImg"></div> `
                 newDiv.addEventListener('click', () => { 
                     if(board[i][j] === currentPiece) {
                         drawBoard()
@@ -155,7 +205,7 @@ function drawBoard() {
             if(extraBoard[i][j]) {
                 const ex = extraBoard[i][j]
                 const extraDiv = document.createElement('div')
-                extraDiv.classList = 'cell'
+                extraDiv.classList = 'cell2'
                 extraDiv.innerHTML = `<img src="../../image/${ex}.png" alt="${ex}" class="chessImg2"> `
                 newDiv.append(extraDiv)
             }
@@ -165,7 +215,7 @@ function drawBoard() {
                 }
                 const ex = specialBoard[i][j]
                 const extraDiv = document.createElement('div')
-                extraDiv.classList = 'cell'
+                extraDiv.classList = 'cell2'
                 extraDiv.innerHTML = `<img src="../../image/${ex}.png" alt="${ex}" class="chessImg2"> `
                 newDiv.append(extraDiv)
             }
@@ -175,13 +225,52 @@ function drawBoard() {
     }
 }
 drawBoard()
+/* draw on cell for efficiency */ 
+function drawCell(i,j) {
+    const cell = document.getElementById(`p${i}_${j}`)
+    if(!cell) return
+    cell.innerHTML = ''
+    const color = ((i + j) % 2) ? oddCellColor : evenCellColor
+    cell.style.width = `${s_squareSize}px`
+    cell.style.height = `${s_squareSize}px`
+    cell.style.backgroundColor = color
+    if(board[i][j]) {
+        cell.innerHTML = `<div class="cell"><img src="../../image/${board[i][j]}.png" alt="${board[i][j]}" class="chessImg"></div> `
+        cell.addEventListener('click', () => { 
+            if(board[i][j] === currentPiece) {
+                drawBoard()
+                currentPiece = ''
+                return
+            }
+            currentPiece = (isChessPiece(board[i][j])) ? (board[i][j] === 'pawn2') ? 'pawn' : board[i][j] : currentPiece
+            handlePieceClick(i,j)
+        })
+    }
+    if(extraBoard[i][j]) {
+        const ex = extraBoard[i][j]
+        const extraDiv = document.createElement('div')
+        extraDiv.classList = 'cell2'
+        extraDiv.innerHTML = `<img src="../../image/${ex}.png" alt="${ex}" class="chessImg2"> `
+        cell.append(extraDiv)
+    }
+    if(specialBoard[i][j]) {
+        if((specialBoard[i][j] === 'triggerblock' || specialBoard[i][j] === 'untriggerblock') && isChange) {
+            specialBoard[i][j] = (specialBoard[i][j] === 'triggerblock') ? 'untriggerblock' : 'triggerblock'
+        }
+        const ex = specialBoard[i][j]
+        const extraDiv = document.createElement('div')
+        extraDiv.classList = 'cell2'
+        extraDiv.innerHTML = `<img src="../../image/${ex}.png" alt="${ex}" class="chessImg2"> `
+        cell.append(extraDiv)
+    }
+}
 /* handle click on piece */
 let currentPiece = ''
 let circlePositions = []
 let isAnimating = false
 function handlePieceClick(i,j) {
     const piece = board[i][j]
-    if(!isChessPiece(piece)) return
+    if(!isChessPiece(piece) || specialBoard[i][j] === 'triggerblock') return
     console.log(`piece: ${piece}`)
     let row ,col
     drawBoard()
@@ -213,9 +302,13 @@ function handlePieceClick(i,j) {
     }
     switch(piece) {
         case 'pawn2' :
-            getCircle(i - 2,j)
+            row = i - 2
+            col = j
+            if(satisfy() && !cantMoveThrough(row,col)) getCircle(row,col)
         case 'pawn' :
-            getCircle(i - 1,j)
+            row = i - 1
+            col = j
+            if(satisfy() && !cantMoveThrough(row,col)) getCircle(row,col)
             if(i != 0) {
                 if(j > 0 && checkTakeEnemy(i-1,j-1)) {
                     getCircle(i-1,j-1)
@@ -231,8 +324,7 @@ function handlePieceClick(i,j) {
         case 'knight' :
             const narr = [[i+2,j-1],[i+2,j+1],[i+1,j-2],[i+1,j+2],[i-2,j-1],[i-2,j+1],[i-1,j-2],[i-1,j+2]]
             narr.forEach(pos => {
-                if(pos[0] >= 0 && pos[0] < h_boardHeight && pos[1] >= 0 && pos[1] < w_boardWidth && cantMoveThrough(pos[0],pos[1])) return
-                getCircle(pos[0],pos[1])
+                if(pos[0] >= 0 && pos[0] < h_boardHeight && pos[1] >= 0 && pos[1] < w_boardWidth && !cantMoveThrough(pos[0],pos[1])) getCircle(pos[0],pos[1])
             })
             break
         case 'bishop' :
@@ -253,9 +345,8 @@ function handlePieceClick(i,j) {
     }
     if(circlePositions.length === 0) currentPiece = ''
     circlePositions.forEach(pos => {
-        document.getElementById(`p${pos[0]}${pos[1]}`).addEventListener('click', () => {
+        document.getElementById(`p${pos[0]}_${pos[1]}`).addEventListener('click', () => {
             if(isAnimating) return
-            isAnimating = true
             Moves++
             if(checkTakeEnemy(pos[0],pos[1])) {
                 enemies = enemies.filter(enemy => !arrEqual(enemy, pos))
@@ -265,6 +356,7 @@ function handlePieceClick(i,j) {
             }
             board[i][j] = 0
             board[pos[0]][pos[1]] = currentPiece
+            checkGotKey([pos[0],pos[1]], pos)
             drawBoard()
             checkPromote(pos[0],pos[1])
             handleTeleport(pos[0],pos[1]) 
@@ -275,9 +367,10 @@ function handlePieceClick(i,j) {
 }
 
 function getCircle(i,j) {
-    const nextDiv = document.getElementById(`p${i}${j}`)
-    const notGoToThis = ['untriggerblock']
-    if(!nextDiv || notGoToThis.includes(specialBoard[i][j])) return
+    const nextDiv = document.getElementById(`p${i}_${j}`)
+    // const notGoToThis = ['untriggerblock']
+    // || notGoToThis.includes(specialBoard[i][j])
+    if(!nextDiv  || (specialBoard[i][j] === 'teleport' && checkPieceOnTeleport())) return
     const circleImg = new Image()
     circleImg.src = (checkTakeEnemy(i,j)) ? '../../image/circleRed.png' : '../../image/circle.png'
     circleImg.alt = 'movehere'
@@ -288,6 +381,7 @@ function getCircle(i,j) {
 
 function checkGravity() {
     let movement = []
+    isAnimating = true
     for(let i = h_boardHeight - 1; i >= 0; i--) {
         for(let j = w_boardWidth - 1; j >= 0; j--) {
             let current = board[i][j]
@@ -299,14 +393,22 @@ function checkGravity() {
                     to: [],
                 }
                 current = board[row][j]
-                while(!solidStand(row,j)) {
-                    anim = true
+                for(; row < h_boardHeight; row++) {
+                    if(solidStand(row,j)) break
                     seg.to = [row,j]
-                    row++
-                    if(row >= h_boardHeight) break
                     current = board[row][j]
+                    checkGotKey([row,j],[row,j])
+                    anim = true
+                    if(specialBoard[row][j] === 'teleport') {
+                        const arr = teleports.findNext([row,j])
+                        if(!isChessPiece(board[arr[0]][arr[1]])) break
+                    }
                 }
                 if(anim) {
+                    for(let x = i + 1; x <= seg.to[0]; x++) {
+                        const delay = animationDelay * (x - i)
+                        setTimeout(() => { drawCell(x,j)}, delay)
+                    }
                     movement.push(seg)
                     let temp = board[seg.from[0]][seg.from[1]]
                     board[seg.from[0]][seg.from[1]] = 0
@@ -327,9 +429,9 @@ function getAnimation(arr) {
     }
     let maxDelay = 0
     arr.forEach(set => {
-        const fromDiv = document.getElementById(`p${set.from[0]}${set.from[1]}`)
-        const toDiv = document.getElementById(`p${set.to[0]}${set.to[1]}`)
-        const delay = (set.to[0] - set.from[0]) * 123
+        const fromDiv = document.getElementById(`p${set.from[0]}_${set.from[1]}`)
+        const toDiv = document.getElementById(`p${set.to[0]}_${set.to[1]}`)
+        const delay = (set.to[0] - set.from[0]) * animationDelay
         maxDelay = Math.max(maxDelay,delay)
         // console.log(delay)
         if (fromDiv && toDiv && fromDiv.firstChild) { 
@@ -346,16 +448,17 @@ function getAnimation(arr) {
                     console.log(`enemy taken at ${set.to[0]} , ${set.to[1]}`)
                     checkWin()
                 }
-                toDiv.appendChild(child)
+                toDiv.insertBefore(child, toDiv.firstChild)
                 child.style.transform = 'none'
                 child.style.transition = 'none'
+                handleTeleport(set.to[0],set.to[1])
             }, delay)
         }
     })
     setTimeout(() => {
         drawBoard()
         isAnimating = false
-    },maxDelay)
+    },maxDelay + 10)
 }
 
 function checkPromote(i,j) {
@@ -460,19 +563,23 @@ function checkOnpad() {
     return specialBoard.flat(2).includes('onpad')
 }
 
-function checkGotKey() {
-    for(let i = 0; i < h_boardHeight; i++) {
-        for(let j = 0; j < w_boardWidth; j++) {
-            if(isChessPiece(board[i][j]) && specialBoard[i][j] === 'key') {
+function checkGotKey(from, to) {
+    if(!hasKey) return
+    for(let i = from[0]; i <= to[0]; i++) {
+        for(let j = from[1]; j <= to[1]; j++) {
+            if(specialBoard[i][j] === 'key') {
                 specialBoard[i][j] = 0
-                console.log('key taken!')
-                specialBoard = specialBoard.map(arr => arr.map(cell => {return (cell === 'lockblock') ? 0 : cell}))
-                hasKey = false
-                setTimeout(checkGravity,10)
-                console.log(specialBoard)
-                return
+                // drawCell(i,j)
+            }
+            if(board[i][j] === 'enemy') {
+                board[i][j]  = 0
             }
         }
+    }
+    if(!specialBoard.flat(2).includes('key')) {
+        specialBoard = specialBoard.map(arr => arr.map(cell => {return (cell === 'lockblock') ? 0 : cell}))
+        hasKey = false
+        setTimeout(checkGravity,10)
     }
 }
 
@@ -481,25 +588,34 @@ function handleTeleport(row,col) {
     const size = w_boardWidth * h_boardHeight
     let set = {
         from: [row,col],
-        to: []
+        to: teleports.findNext([row,col])
     }
-    // console.log(`max Width: ${w_boardWidth}, max Height: ${h_boardHeight}, current piece: ${currentPiece}`)
-    for(let p = row * w_boardWidth + col + 1; p < size * 2; p++) {
-        const i = Math.floor((p % size) / w_boardWidth)
-        const j = (p % size) % w_boardWidth
-        if(specialBoard[i][j] === 'teleport') {
-            set.to = [i,j]
-            break
-        }
-    }
-    if(set.to.length  > 0) {
-        const fromDiv = document.getElementById(`p${set.from[0]}${set.from[1]}`)
-        const toDiv = document.getElementById(`p${set.to[0]}${set.to[1]}`)
+    const current = board[row][col]
+    console.log(`move ${current} to ${set.to[0]} ${set.to[1]}`)
+    if(set.to.length > 0 && !isChessPiece(board[set.to[0]][set.to[1]])) {
+        const fromDiv = document.getElementById(`p${set.from[0]}_${set.from[1]}`)
+        const toDiv = document.getElementById(`p${set.to[0]}_${set.to[1]}`)
         const child = fromDiv.firstChild
         board[set.from[0]][set.from[1]] = 0
-        board[set.to[0]][set.to[1]] = currentPiece
+        board[set.to[0]][set.to[1]] = current
         toDiv.insertBefore(child, toDiv.firstChild)
+        checkPromote(set.to[0],set.to[1])
+        drawCell(set.to[0],set.to[1])
+        requestAnimationFrame(checkGravity)
+        // drawCell(set.to)
+        // drawBoard()
     }
+}
+
+function checkPieceOnTeleport() {
+    for(let i = 0; i < h_boardHeight; i++) {
+        for(let j = 0; j < w_boardWidth; j++) {
+            if(isChessPiece(board[i][j]) && specialBoard[i][j] === 'teleport') {
+                return true
+            }
+        }
+    }
+    return false
 }
 /* debug games */
 // games = [
@@ -509,16 +625,16 @@ function handleTeleport(row,col) {
 //         leastMove: 0,
 //         coin: 10,
 //         level:  [
-//             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'wall', 0, 0, 0, 0],
-//             ['pawn2', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'wall', 0, 0, 0, 0],
-//             ['rook', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'wall', 0, 0, 0, 0],
-//             ['wall','wall', 0, 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 0, 0, 0, 0],
-//             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-//             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-//             ['wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 0, 'wall', 'wall', 'wall'],
-//             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-//             ['enemy', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-//             ['wall', 'wall', 0, 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall', 'wall']
+//             [[0], [0], [0], [0], [0], [0], [0], [0], [0], ['wall'], [0], [0], [0], [0], [0], [0]],
+//             [['pawn'], [0], [0], [0], [0], [0], [0], [0], [0], ['wall'], [0], [0], [0], [0], [0], [0]],
+//             [['rook'], [0], [0], [0], [0], [0], [0], [0], [0], ['wall'], [0], [0], [0], [0], [0], [0]],
+//             [['wall'], ['wall'], [0], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], [0], [0], [0], [0], [0], [0]],
+//             [[0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+//             [[], [], [], [], [], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+//             [['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], [0], ['wall'], ['wall'], ['wall'], ['wall']],
+//             [[], [], [], [], [], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+//             [['enemy'], [], [], [], [], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+//             [['wall'], ['wall'], ['wall'], [], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall']]
 //             ],
 //     },
 //     {
@@ -526,172 +642,456 @@ function handleTeleport(row,col) {
 //         isLock: false,
 //         leastMove: 0,
 //         coin: 10,
-//         level:  [],
+//         level:  [
+//             [[0], [0], [0], [0], [0]],
+//             [[0], [0], ['knight'], [0], [0]],
+//             [[0], [0], [0], [0], [0]],
+//             [['wall'], ['wall'], ['wall'], ['wall'], ['wall']],
+//             [[0], [0], [0], [0], [0]],
+//             [['wall'], ['wall'], ['wall'], ['wall'], ['wall']],
+//             [[], [], [], [], []],
+//             [['wall'], ['wall'], ['wall'], ['wall'], ['wall']],
+//             [[], [], ['enemy'], [], []]
+//             ],
 //     },
 //     {
 //         isDone: false,
 //         isLock: false,
 //         leastMove: 0,
 //         coin: 10,
-//         level:  [],
+//         level:  [
+//             [[0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+//             [[0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+//             [[0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+//             [[0], [0], [0], ['wall'], [0], [0], [0], [0], [0], [0], [0], ['wall'], [0], [0], [0]],
+//             [['wall'], [0], [0], ['wall'], [0], [0], [0], [0], [0], [0], [0], ['wall'], ['wall'], [0], [0]],
+//             [[], [], [], ['wall'], [], [0], [0], [0], [0], [0], [0], ['wall'], [0], [0], [0]],
+//             [[], [], ['wall'], ['wall'], [], [0], [0], [0], [0], [0], [0], ['wall'], [0], [0], ['wall']],
+//             [[], [], [], ['wall'], [], [0], [0], [0], [0], [0], [0], ['wall'], [0], [0], [0]],
+//             [['wall'], [], [], ['wall'], [], [], [], [], [], [], [], ['wall'], ['wall'], [], []],
+//             [[], [], ['queen'], ['wall'], [], [], [], [], [], [], [], ['wall'], [], ['enemy'], []]
+//             ],
 //     },
 //     {
 //         isDone: false,
 //         isLock: false,
 //         leastMove: 0,
 //         coin: 10,
-//         level:  [],
+//         level:  [
+//             [[0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+//             [['rook'], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+//             [[0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], ['enemy']],
+//             [[0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], ['wall']],
+//             [[0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], ['wall'], ['wall']],
+//             [['king'], [], [], [], [], [], [], [], [0], [0], ['wall'], ['wall'], ['wall']],
+//             [['wall'], ['wall'], ['wall'], ['wall'], ['wall'], [], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall']],
+//             [[], [], [], [], ['wall'], [], ['wall'], [], [], [], [], [], []],
+//             [[], [], [], [], ['wall'], ['wall'], ['wall'], [], [], [], [], [], []],
+//             [[], [], [], [], [], [], [], [], [], [], [], [], []]
+//             ],
 //     },
 //     {
 //         isDone: false,
 //         isLock: false,
 //         leastMove: 0,
 //         coin: 10,
-//         level:  [],
+//         level:  [
+//             [['wall'], ['wall'], ['wall'], [0], [0], ['wall'], ['wall'], [0], ['wall'], [0], [0], [0], ['wall'], [0], [0]],
+//             [['wall'], ['wall'], [0], [0], ['wall'], ['wall'], [0], ['wall'], ['wall'], ['wall'], [0], [0], ['wall'], ['wall'], [0]],
+//             [['wall'], [0], [0], ['wall'], ['wall'], [0], ['wall'], ['wall'], [0], ['wall'], ['wall'], [0], [0], [0], ['wall']],
+//             [[0], [0], ['wall'], ['wall'], [0], ['wall'], ['wall'], [0], [0], ['wall'], ['wall'], [0], [0], ['wall'], [0]],
+//             [[0], ['wall'], ['wall'], [0], ['wall'], [0], ['wall'], [0], ['wall'], ['wall'], [0], [0], [0], [0], [0]],
+//             [[], ['wall'], [], ['wall'], ['wall'], ['wall'], [], ['wall'], ['wall'], ['wall'], [], [], [], [], []],
+//             [['wall'], ['wall'], ['wall'], ['wall'], [], [], ['wall'], ['bishop'], ['wall'], [], ['wall'], [], [], ['wall'], []],
+//             [[], [], [], [], [], [], [], ['wall'], [], ['wall'], [], [], [], ['wall'], []],
+//             [['wall'], ['wall'], ['wall'], [], [], [], [], [0], ['wall'], [], ['wall'], [], ['wall'], ['wall'], []],
+//             [[], [], ['wall'], ['wall'], [], [], [], ['wall'], [], ['wall'], [], ['wall'], ['wall'], [], ['wall']],
+//             [[], [], [], ['wall'], ['wall'], [], [], [], [], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], []],
+//             [[0], ['wall'], [], [], ['wall'], ['wall'], [], ['wall'], [], ['wall'], ['enemy'], [], [], ['wall'], []],
+//             [[], ['wall'], [], [], [], ['wall'], ['wall'], [], ['wall'], ['wall'], ['wall'], [], [], [], ['wall']],
+//             [[], ['wall'], [], [], [], [], [], ['wall'], ['wall'], [], [], [], [], ['wall'], ['wall']],
+//             [['wall'], ['wall'], ['wall'], [], [], [], [], ['wall'], [], [], [], [], ['wall'], ['wall'], ['wall']]
+//             ],
 //     },
 //     {
 //         isDone: false,
 //         isLock: true,
 //         leastMove: 0,
 //         coin: 10,
-//         level:  [],
+//         level:  [
+//             [[0], [0], [0], [0], [0], [0], [0], [0], [0], ['enemy']],
+//             [[0], [0], [0], [0], [0], [0], [0], [0], ['wall'], ['wall']],
+//             [['knight'], [0], [0], ['wall'], [0], [0], [0], ['wall'], ['wall'], ['wall']],
+//             [['king'], [0], [0], ['wall'], [0], [0], ['wall'], ['wall'], ['wall'], ['wall']],
+//             [['bishop'], ['wall'], [0], ['wall'], [0], [0], ['wall'], ['wall'], ['wall'], ['wall']]
+//             ],
 //     },
 //     {
 //         isDone: false,
 //         isLock: true,
 //         leastMove: 0,
 //         coin: 10,
-//         level:  [],
+//         level:  [
+//             [[0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+//             [['enemy'], [0], [0], [0], [0], ['wall'], [0], [0], [0], [0], [0], ['knight'], [0], [0]],
+//             [['wall'], [0], [0], [0], [0], [0], [0], ['wall'], [0], [0], [0], [0], [0], [0]],
+//             [[0], [0], ['wall'], [0], [0], [0], [0], [0], [0], ['wall'], [0], ['knight'], [0], [0]],
+//             [[0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+//             [[], [], [], [], ['wall'], [0], [0], [0], ['wall'], [0], [0], [0], [0], [0]],
+//             [[], [], [], [], ['wall'], [0], [0], [0], ['wall'], [0], [0], [0], [0], [0]],
+//             [[], [], [], [], ['wall'], ['wall'], [0], [0], ['wall'], [0], [0], [0], [0], [0]]
+//             ],
 //     },
 //     {
 //         isDone: false,
 //         isLock: true,
 //         leastMove: 0,
 //         coin: 10,
-//         level:  [],
+//         level:  [
+//             [[0], [0], [0], [0], [0], [0], [0], [0], ['wall'], [0], ['king']],
+//             [['pedestal'], [0], [0], [0], [0], [0], [0], [0], ['wall'], [0], ['wall']],
+//             [['pedestal'], [0], [0], [0], [0], [0], [0], [0], ['wall'], [0], [0]],
+//             [['pawn2'], [0], [0], [0], [0], [0], [0], [0], ['wall'], ['wall'], [0]],
+//             [['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], [0], [0], ['wall'], [0], [0]],
+//             [['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], [0], ['wall']],
+//             [['wall'], [], [], [], [], [0], [0], [0], ['wall'], [0], [0]],
+//             [['enemy'], [], [], [], [], ['wall'], [], [0], ['wall'], ['wall'], []],
+//             [['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], [0], [0], [0], [], []]
+//             ],
 //     },
 //     {
 //         isDone: false,
 //         isLock: true,
 //         leastMove: 0,
 //         coin: 10,
-//         level:  [],
+//         level:  [
+//             [[0], [0], [0], ['wall'], ['wall'], [0], [0], ['wall'], ['enemy'], ['wall'], ['queen'], ['wall'], ['wall'], ['wall'], ['queen'], ['wall']],
+//             [[0], [0], [0], [0], ['wall'], [0], ['wall'], ['wall'], ['pedestal'], ['wall'], ['queen'], ['queen'], ['queen'], ['wall'], ['queen'], ['wall']],
+//             [[0], [0], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], [0], ['wall'], ['queen'], ['wall'], ['wall'], ['wall'], ['queen'], ['wall']],
+//             [[0], [0], ['pedestal'], [0], ['wall'], [0], [0], ['wall'], [0], ['wall'], ['queen'], ['wall'], ['queen'], ['wall'], ['queen'], ['wall']],
+//             [['pedestal', 'rook'], ['pedestal'], ['pedestal'], [0], ['wall'], ['wall'], [0], ['wall'], [0], ['wall'], ['queen'], ['queen'], ['queen'], ['queen'], ['queen'], ['wall']],
+//             [[], [], ['pedestal'], [], [], [0], ['pedestal'], ['wall'], [0], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall']],
+//             [[], [], [], [], [], [], [], [], [], [], [], [], [0], ['bishop'], [0], [0]],
+//             [[], [], [], [], [0], [], [], ['wall'], ['wall'], ['wall'], [], [], [0], [0], [0], [0]],
+//             [[], [0], [0], [], [0], [], [], ['wall'], [], ['wall'], [], [], [0], [0], [0], [0]],
+//             [[], ['wall'], ['wall'], ['wall'], ['wall'], [0], [0], [0], ['bishop'], [0], [], [], [0], [0], [0], [0]],
+//             [[], [], [], [], ['wall'], [], [], ['wall'], ['king'], ['wall'], [], [], [0], [0], [0], ['pedestal']]
+//             ],
 //     },
 //     {
 //         isDone: false,
 //         isLock: true,
 //         leastMove: 0,
 //         coin: 10,
-//         level:  [],
+//         level:  [
+//             [[], [], [], [], [], [], [], [0], [], [0], [], [], [], [], []],
+//             [[], [], [], [], [], [], [], [0], [], [0], [], [], [], [], []],
+//             [[], [], [], [], [], [], [], ['bishop'], [], [0], [], [], [], [], []],
+//             [[], [], [], [], [], [], [], ['bishop'], [], [0], [], [], [], [], []],
+//             [['wall'], ['wall'], ['wall'], ['wall'], [], [], [], ['king'], [], [0], [], ['wall'], ['wall'], ['wall'], ['wall']],
+//             [['enemy'], [], [], [], [], [], [], ['bishop'], [], [0], [], [], [], [], ['enemy']],
+//             [['wall'], ['wall'], ['wall'], ['wall'], ['wall'], [], [], ['bishop'], [], [0], ['wall'], ['wall'], ['wall'], ['wall'], ['wall']],
+//             [[], [], [], [], ['wall'], [], [], ['bishop'], [], [0], ['wall'], [], [], [], []],
+//             [[], [], [], [], ['wall'], [], [], ['bishop'], [], [0], ['wall'], [], [], [], []],
+//             [[], [], [], [], ['wall'], [], [], ['bishop'], [], [0], ['wall'], [], [], [], []],
+//             [[], [], [], [], ['wall'], [0], [], ['bishop'], [], [0], ['wall'], [], [], [], []]
+//             ],
 //     },
 //     {
 //         isDone: false,
 //         isLock: true,
 //         leastMove: 0,
 //         coin: 10,
-//         level:  [],
+//         level:  [
+//             [[], [], [], [], [], [0], [0], [0], [0]],
+//             [['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall']],
+//             [[0], ['wall'], [], [], [], [0], [0], ['wall'], [0]],
+//             [[0], ['wall'], [], [], ['enemy'], [0], [0], ['wall'], [0]],
+//             [[0], ['wall'], [], [], ['wall'], [0], [0], ['wall'], [0]],
+//             [[0], ['wall'], [], [], [], [0], ['wall'], ['wall'], [0]],
+//             [[0], ['wall'], ['wall'], [], [], [0], [0], ['wall'], [0]],
+//             [[], ['wall'], [], [], [], [0], [0], ['wall'], [0]],
+//             [[0], ['wall'], [], [], [], [0], [0], ['wall'], [0]],
+//             [[0], ['wall'], [], [0], ['knight'], [], [], ['wall'], []],
+//             [[0], ['wall'], [], ['knight'], ['knight'], ['knight'], [], ['wall'], []],
+//             [[], ['wall'], ['knight'], ['knight'], ['knight'], ['knight'], ['knight'], ['wall'], []],
+//             [['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall']],
+//             [[], [], [], [], [], [], [], [], []]
+//             ],
 //     },
 //     {
 //         isDone: false,
 //         isLock: true,
 //         leastMove: 0,
 //         coin: 10,
-//         level:  [],
+//         level:  [
+//             [[], [], [], [], [], [], [], [], [], [], []],
+//             [[0], [], [], [], [], [], [], [], [], [], []],
+//             [[], [], [], [], [], [], [], [], [], [], []],
+//             [['queen'], ['queen'], ['queen'], ['queen'], ['queen'], ['queen'], ['queen'], ['queen'], ['queen'], ['queen'], ['queen']],
+//             [['queen'], ['wall'], ['wall'], ['wall'], ['queen'], ['wall'], ['wall'], ['queen'], ['queen'], ['wall'], ['queen']],
+//             [['queen'], ['queen'], ['queen'], ['queen'], ['queen'], ['queen'], ['queen'], ['queen'], ['queen'], ['queen'], ['queen']],
+//             [['queen'], ['pedestal', 'queen'], ['queen'], ['queen'], ['queen'], ['queen'], ['queen'], ['queen'], ['wall'], ['queen'], ['queen']],
+//             [['pedestal', 'queen'], ['queen'], ['pedestal', 'queen'], ['pedestal', 'queen'], ['queen'], ['wall'], ['queen'], ['queen'], ['queen'], ['queen'], ['queen']],
+//             [['pedestal', 'queen'], ['wall'], ['pedestal', 'queen'], ['pedestal', 'queen'], ['wall'], ['queen'], ['queen'], ['wall'], ['queen'], ['queen'], ['queen']],
+//             [['pedestal', 'queen'], ['pedestal', 'queen'], ['pedestal', 'queen'], ['pedestal', 'queen'], ['pedestal', 'queen'], ['queen'], ['wall'], ['queen'], ['wall'], ['wall'], ['wall']],
+//             [['knight'], ['pedestal', 'queen'], ['pedestal', 'queen'], ['pedestal', 'queen'], ['pedestal', 'queen'], ['queen'], ['queen'], ['queen'], ['queen'], ['wall'], ['enemy']]
+//             ],
 //     },
 //     {
 //         isDone: false,
 //         isLock: true,
 //         leastMove: 0,
 //         coin: 10,
-//         level:  [],
+//         level:  [
+//             [[0], [0], [0], ['wall'], ['key'], ['wall'], [0], [0], [0], [0], [0], [0]],
+//             [['pedestal'], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+//             [['pedestal'], [0], [0], ['wall'], [0], ['wall'], [0], [0], [0], [0], [0], [0]],
+//             [['pawn2'], [0], [0], ['wall'], [0], ['wall'], [0], [0], [0], [0], [0], [0]],
+//             [['wall'], [0], [0], [0], [0], ['wall'], [0], [0], [0], ['wall'], ['wall'], ['wall']],
+//             [[], [], [], [], [], ['pawn2'], [0], [0], ['wall'], ['lockblock'], ['lockblock'], ['lockblock']],
+//             [[], [], [], [], [], ['pawn2'], [0], [0], ['wall'], ['lockblock'], [0], [0]],
+//             [[], [], [], [], [], ['pawn2'], [0], [0], ['wall'], ['lockblock'], [0], ['enemy']]
+//             ],
+//     },
+//     {
+//         isDone: false,
+//         isLock: true,
+//         leastMove: 0,
+//         limit: 65,
+//         coin: 10,
+//         level:  [
+//             [['enemy'], ['enemy'], ['enemy'], ['enemy'], ['enemy'], ['enemy'], ['enemy'], ['enemy']],
+//             [['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy']],
+//             [['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy']],
+//             [['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy']],
+//             [['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy']],
+//             [['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy']],
+//             [['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy']],
+//             [['pedestal', 'knight'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy'], ['pedestal', 'enemy']]
+//             ],
 //     },
 //     {
 //         isDone: false,
 //         isLock: true,
 //         leastMove: 0,
 //         coin: 10,
-//         level:  [],
+//         level:  [
+//             [['key'], ['key'], [0], [0], ['key'], ['key'], ['key'], ['key'], ['key'], ['key'], [0], ['key']],
+//             [[], [], [], [], [], [], [], [], [0], ['lockblock'], ['lockblock'], ['lockblock']],
+//             [[], [], [], [], [], [], [], [], [0], ['lockblock'], [0], ['lockblock']],
+//             [[], [], [], [], [], [], ['wall'], [], [0], ['lockblock'], ['king'], ['lockblock']],
+//             [[], [], [], [], [], [0], ['wall'], [0], ['wall'], ['wall'], ['wall'], ['wall']],
+//             [['wall'], [], [], [], ['wall'], [], ['wall'], [], [0], [0], [0], [0]],
+//             [['wall'], ['pedestal'], ['pedestal'], ['pedestal'], ['wall'], ['pedestal'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall']],
+//             [['wall'], [], [], [], ['wall'], [0], [0], [0], ['wall'], ['knight'], ['wall'], ['enemy']],
+//             [['wall'], [], [], [], ['wall'], ['pedestal'], [], [], ['wall'], ['wall'], ['wall'], ['pedestal']],
+//             [['wall'], ['pedestal'], ['pedestal'], ['pedestal'], ['wall'], [], [], [0], [0], ['wall'], ['wall'], ['pedestal']],
+//             [['wall'], [0], [0], [0], ['wall'], [], [], [0], [0], [], [], ['wall']],
+//             [['wall'], ['bishop'], [], [], ['wall'], [0], [0], [0], [0], ['wall'], ['wall'], ['wall']]
+//             ],
 //     },
 //     {
 //         isDone: false,
 //         isLock: true,
 //         leastMove: 0,
 //         coin: 10,
-//         level:  [],
+//         level:  [
+//             [['enemy'], [0], [0], [0], [0], [0]],
+//             [['wall'], ['wall'], ['wall'], ['wall'], ['wall'], [0]],
+//             [[0], [0], [0], [0], [0], [0]],
+//             [[0], [0], [0], [0], [0], [0]],
+//             [[0], [0], [0], [0], [0], [0]],
+//             [['pedestal'], [], [], [], [], [0]],
+//             [['bishop'], ['knight'], ['rook'], ['king'], ['queen'], ['pawn2']]
+//             ],
 //     },
 //     {
 //         isDone: false,
 //         isLock: true,
 //         leastMove: 0,
 //         coin: 10,
-//         level:  [],
+//         level:  [
+//             [['wall'], ['wall'], ['wall'], ['king'], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], ['wall']],
+//             [['wall'], ['wall'], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], ['wall']],
+//             [['wall'], ['wall'], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], ['wall']],
+//             [['wall'], ['wall'], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], ['enemy'], ['wall']],
+//             [['wall'], ['wall'], ['wall'], ['wall'], ['wall'], [0], ['wall'], [0], ['wall'], [0], ['wall'], [0], ['wall'], ['wall'], ['wall'], ['wall']],
+//             [['wall'], [], [], [], ['wall'], [0], ['wall'], [0], ['wall'], [0], ['wall'], [0], ['wall'], [0], [0], [0]],
+//             [['wall'], [], [], [], ['wall'], ['wall'], [0], ['wall'], [0], ['wall'], [0], ['wall'], ['wall'], [0], [0], [0]],
+//             [['wall'], [], [], [], [], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+//             [['wall'], [], ['pedestal'], [], ['wall'], [0], [0], [0], [0], [0], [0], [0], ['wall'], [0], ['pedestal'], [0]],
+//             [['wall'], [], [], [], [], ['wall'], [0], [0], [0], [0], [0], ['wall'], [0], [0], [0], [0]],
+//             [['wall'], [0], [0], [0], [0], [0], [0], ['rook'], [0], ['queen'], [0], [0], [0], [0], [0], [0]]
+//             ],
 //     },
 //     {
 //         isDone: false,
 //         isLock: true,
 //         leastMove: 0,
 //         coin: 10,
-//         level:  [],
+//         level:  [
+//             [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+//             [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+//             [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+//             [['rook'], ['triggerblock'], [], ['untriggerblock'], [], ['triggerblock'], [], ['untriggerblock'], [], ['triggerblock'], [], ['untriggerblock'], [], ['triggerblock'], [], ['enemy']],
+//             [['wall'], [], ['wall'], [], ['wall'], [], ['wall'], [], ['wall'], [0], ['wall'], [0], ['wall'], [], ['wall'], ['wall']],
+//             [['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall']],
+//             [[], ['wall'], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+//             [[0], ['wall'], [0], [], [], [], [], [], [], [], [], [], [], [], [], []],
+//             [[0], ['wall'], ['wall'], [0], ['wall'], [0], [], [], [], [], [], [], [], [], [], []],
+//             [['pad'], ['wall'], [0], [], [], [0], [0], [], [], [], [], [], [], [], [], []],
+//             [['wall'], ['wall'], [0], [0], [0], ['wall'], [], [0], [0], [], [], [], [], [], [], []],
+//             [[0], [], [0], [0], [0], [], [], [0], [], [], [], [], [], [], [], []],
+//             [[], [], ['knight'], [], ['wall'], [], [], [], [], [], [], [], [], [], [], []]
+//             ],
 //     },
 //     {
 //         isDone: false,
 //         isLock: true,
 //         leastMove: 0,
 //         coin: 10,
-//         level:  [],
+//         level:  [
+//             [['wall'], ['wall'], ['key'], [], [], [], ['wall'], ['wall'], [], [0], [0], [0], [0], [0]],
+//             [[], [], ['wall'], ['wall'], ['wall'], [0], ['wall'], ['wall'], ['pawn2'], [0], [0], [0], ['wall'], [0]],
+//             [[], [], [], [], [], [0], ['wall'], ['wall'], ['wall'], [0], [0], [0], ['wall'], [0]],
+//             [['wall'], ['wall'], ['wall'], [0], ['wall'], ['wall'], ['wall'], ['wall'], [], [0], [0], ['wall'], ['wall'], [0]],
+//             [[], [], [], [], [], [], ['wall'], ['wall'], [], [0], ['wall'], ['wall'], ['wall'], [0]],
+//             [['bishop'], [], [], [0], [0], [0], ['wall'], ['wall'], [0], [0], [0], [0], ['wall'], ['key']],
+//             [['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall']],
+//             [['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall']],
+//             [[], [], [], [], [], ['key'], ['wall'], ['wall'], [], [0], [0], [0], ['wall'], [0]],
+//             [[0], [], [], [], [0], [], ['wall'], ['wall'], [], [0], [0], [0], ['wall'], [0]],
+//             [[0], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], [], [], [0], [0], ['wall'], [0]],
+//             [[], [], [], [0], [0], [], ['wall'], ['wall'], ['rook'], [], [0], [0], ['wall'], ['lockblock']],
+//             [['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['lockblock'], ['lockblock'], ['lockblock'], ['lockblock'], ['lockblock'], ['lockblock']],
+//             [['knight'], [], [], [], [], [], ['wall'], ['wall'], [], [], [], ['wall'], ['lockblock'], ['enemy']]
+//             ],
 //     },
 //     {
 //         isDone: false,
 //         isLock: true,
 //         leastMove: 0,
 //         coin: 10,
-//         level:  [],
+//         level:  [
+//             [['queen'], [0], [0], [0], ['teleport'], ['wall'], [0], [0], [0], [0], [0], [0], ['wall'], ['teleport']],
+//             [['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], [0], [0], [0], [0], [0], [0], ['wall'], [0]],
+//             [[0], [0], [0], [0], [0], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], [0]],
+//             [[0], [0], [0], [0], [0], ['wall'], [0], [0], [0], [0], [0], [0], [0], [0]],
+//             [[0], [0], [0], [0], [0], ['wall'], ['teleport'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall']],
+//             [[], [], [], [], [], ['wall'], [0], ['wall'], [0], [0], [0], [0], [0], [0]],
+//             [['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall']],
+//             [['teleport'], [], [], [], [], [0], [0], [0], [0], [0], [0], [0], [0], ['enemy']]
+//             ],
 //     },
 //     {
 //         isDone: false,
 //         isLock: true,
 //         leastMove: 0,
 //         coin: 10,
-//         level:  [],
+//         level:  [
+//             [[0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+//             [[0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+//             [[0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+//             [['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], [0], [0], [0]],
+//             [[0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+//             [['wall'], ['wall'], [], [], [], [0], [0], ['wall'], ['wall'], [0], [0], [0]],
+//             [[], ['wall'], [], [], [], [0], [0], ['wall'], [0], [0], [0], [0]],
+//             [[], ['wall'], [], [], [], [0], [0], ['wall'], [0], [0], [0], [0]],
+//             [[], ['wall'], [], [], [], [], [0], ['wall'], [0], [0], [0], [0]],
+//             [[], ['wall'], ['bishop'], ['bishop'], ['bishop'], ['bishop'], ['bishop'], ['wall'], [0], [0], [0], [0]],
+//             [[], ['wall'], ['bishop'], ['bishop'], ['bishop'], ['bishop'], ['bishop'], ['wall'], [0], [0], [0], [0]],
+//             [[], ['wall'], ['bishop'], ['bishop'], ['bishop'], ['bishop'], ['bishop'], ['wall'], [0], [0], [0], [0]],
+//             [[], ['wall'], ['bishop'], ['bishop'], ['king'], ['bishop'], ['bishop'], ['wall'], [0], ['enemy'], [0], [0]]
+//             ],
 //     },
 //     {
 //         isDone: false,
 //         isLock: true,
 //         leastMove: 0,
 //         coin: 10,
-//         level:  [],
+//         level:  [
+//             [[], [], [], [], [], [], [], [], [], [], [], []],
+//             [['pedestal', 'rook'], ['wall'], [0], [0], [0], [0], [0], [0], [0], [0], ['pedestal'], []],
+//             [['pedestal'], ['wall'], [], [], [], [], [], [], [], [], [], []],
+//             [['pawn2'], ['wall'], [], [], [], [], [], [], [], [], [], []],
+//             [['wall'], ['wall'], [], [], [], [], [], [], [], [], [], []],
+//             [[], [], [], [], [], [], [], [], [], [], [], []],
+//             [[], [], [], [], [], [], [], [], [], [], [], []],
+//             [['wall'], ['wall'], [], [], [], [], [], [], [], [], [], []],
+//             [['wall'], ['wall'], [], [], [], [], [], [], [], [], [], []],
+//             [['enemy'], ['lockblock'], ['key'], [], ['key'], [], ['key'], [], ['key'], [], ['key'], []],
+//             [['wall'], ['wall'], [], ['wall'], [], ['wall'], [], ['wall'], [], ['wall'], [], ['wall']],
+//             [['wall'], ['wall'], [], ['wall'], [], ['wall'], [], ['wall'], [], ['wall'], [], ['wall']],
+//             [['wall'], ['wall'], [], ['wall'], [], ['wall'], [], ['wall'], [], ['wall'], [], ['wall']]
+//             ],
 //     },
 //     {
 //         isDone: false,
 //         isLock: true,
 //         leastMove: 0,
 //         coin: 10,
-//         level:  [],
+//         level:  [
+//             [[], [], ['wall'], [], [], ['key'], ['wall'], ['lockblock'], ['wall'], ['wall'], ['lockblock'], ['wall'], [0], [0], ['triggerblock'], [0]],
+//             [['pedestal'], ['pedestal'], ['wall'], [], ['wall'], ['wall'], ['wall'], ['pedestal'], ['wall'], ['wall'], ['pedestal'], ['wall'], ['wall'], [0], ['pedestal'], [0]],
+//             [['pawn2'], ['pawn2'], ['wall'], [], [], ['wall'], [], ['pawn2'], ['wall'], ['wall'], ['pawn2'], ['wall'], [0], [0], ['pawn2'], [0]],
+//             [['pedestal'], ['pedestal'], [], ['wall'], ['wall'], ['wall'], [], ['wall'], ['wall'], ['wall'], ['pedestal'], ['wall'], [0], [0], ['wall'], [0]],
+//             [[], [0], [0], ['wall'], ['wall'], ['wall'], [0], [0], ['wall'], ['wall'], [], ['wall'], ['wall'], [0], ['wall'], [0]],
+//             [['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], [], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], [0]],
+//             [['wall'], ['wall'], ['wall'], ['wall'], [0], ['wall'], [0], [], ['wall'], [], [], [], ['wall'], ['enemy'], ['wall'], [0]],
+//             [[0], [0], [0], ['wall'], ['wall'], ['wall'], [], [], ['wall'], ['wall'], [], ['wall'], ['wall'], ['wall'], [0], [0]],
+//             [[], [], [], ['wall'], [0], [0], [], [], [], [], [], [], ['wall'], ['wall'], ['wall'], [0]],
+//             [[], ['pad'], [0], ['wall'], [0], [0], [], [], [], [], [], [], ['wall'], ['wall'], ['wall'], [0]],
+//             [['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall'], ['wall']]
+//             ],
 //     },
 //     {
 //         isDone: false,
 //         isLock: true,
 //         leastMove: 0,
 //         coin: 10,
-//         level:  [],
+//         level:  [
+//             [[], [], ['teleport'], [], ['teleport'], [], ['teleport'], [], ['teleport'], [], ['wall'], [], [0]],
+//             [[], [], [], [], [], [], [], [], [], [], ['wall'], [], [0]],
+//             [[], [], [], [], [], [], [], [], ['wall'], [], ['wall'], [], [0]],
+//             [[], [], [], [], [], [], [], [], ['wall'], [], ['wall'], [], [0]],
+//             [[], [], [], [], [], [], ['wall'], [], ['wall'], [], ['wall'], [], [0]],
+//             [[], [], [], [], [], [], ['wall'], [], ['wall'], [], ['wall'], [], [0]],
+//             [[], [], [], [], ['wall'], [], ['wall'], [], ['wall'], [], ['wall'], [], [0]],
+//             [[], [], [], [], ['wall'], [], ['wall'], ['teleport'], ['wall'], [], ['wall'], [], [0]],
+//             [['knight'], [], ['wall'], [], ['wall'], ['teleport'], ['wall'], [], ['wall'], [], ['wall'], [], [0]],
+//             [['knight'], [], ['wall'], ['teleport'], ['wall'], [], ['wall'], [], ['wall'], [], ['wall'], ['enemy'], [0]]
+//             ],
 //     },
 //     {
 //         isDone: false,
 //         isLock: true,
 //         leastMove: 0,
 //         coin: 10,
-//         level:  [],
-//     },
-//     {
-//         isDone: false,
-//         isLock: true,
-//         leastMove: 0,
-//         coin: 10,
-//         level:  [],
+//         level:  [
+//             [['teleport'], ['knight'], ['triggerblock'], ['untriggerblock'], ['triggerblock'], ['untriggerblock'], ['triggerblock'], ['untriggerblock'], ['triggerblock'], ['untriggerblock'], ['triggerblock']],
+//             [['triggerblock'], ['triggerblock'], ['untriggerblock'], ['triggerblock'], ['untriggerblock'], ['triggerblock'], ['untriggerblock'], ['triggerblock'], ['untriggerblock'], ['triggerblock'], ['untriggerblock']],
+//             [['triggerblock'], ['untriggerblock'], ['triggerblock'], ['untriggerblock'], ['triggerblock'], ['untriggerblock'], ['triggerblock'], ['untriggerblock'], ['triggerblock'], ['untriggerblock'], ['triggerblock']],
+//             [['untriggerblock'], ['triggerblock'], ['untriggerblock'], ['triggerblock'], ['untriggerblock'], ['triggerblock'], ['untriggerblock'], ['triggerblock'], ['untriggerblock'], ['triggerblock'], ['untriggerblock']],
+//             [['triggerblock'], ['untriggerblock'], ['triggerblock'], ['untriggerblock'], ['triggerblock'], ['untriggerblock'], ['triggerblock'], ['untriggerblock'], ['triggerblock'], ['lockblock'], ['lockblock']],
+//             [['untriggerblock'], ['triggerblock'], ['untriggerblock'], ['triggerblock'], ['untriggerblock'], ['triggerblock'], ['untriggerblock'], ['triggerblock'], ['triggerblock'], ['lockblock'], ['key']],
+//             [['triggerblock'], ['untriggerblock'], ['triggerblock'], ['untriggerblock'], ['triggerblock'], ['untriggerblock'], ['triggerblock'], ['wall'], ['wall'], ['wall'], ['wall']],
+//             [['untriggerblock'], ['triggerblock'], ['untriggerblock'], ['triggerblock'], ['untriggerblock'], ['untriggerblock'], ['untriggerblock'], ['wall'], ['wall'], ['wall'], ['wall']],
+//             [['wall'], ['wall'], ['triggerblock'], ['triggerblock'], ['triggerblock'], ['triggerblock'], ['triggerblock'], ['wall'], ['wall'], ['enemy'], ['wall']],
+//             [['wall'], ['wall'], ['wall'], ['untriggerblock'], ['untriggerblock'], ['untriggerblock'], ['untriggerblock'], ['wall'], ['lockblock'], ['wall'], ['wall']],
+//             [['teleport'], ['pad'], ['wall'], ['wall'], [0], [0], [0], [0], ['wall'], ['wall'], ['wall']],
+//             [['queen'], ['wall'], ['wall'], ['wall'], ['wall'], ['pad'], ['wall'], ['pad'], ['wall'], ['wall'], ['wall']]
+//             ],
 //     },
 //     {
 //         message: 'custom level',
-//         level: [[[0]]],
+//         level:  [
+//             [[0],[0],[0],[0],[0]],
+//             [[0],[0],[0],[0],[0]],
+//             [[0],[0],[0],[0],[0]],
+//             [[0],[0],[0],[0],[0]],
+//             [[0],[0],[0],[0],[0]]
+//         ]
 //     }
 // ]
 // saveLevel()
