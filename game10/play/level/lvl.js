@@ -356,7 +356,8 @@ function handlePieceClick(i,j) {
             }
             board[i][j] = 0
             board[pos[0]][pos[1]] = currentPiece
-            checkGotKey([pos[0],pos[1]], pos)
+            checkGotKey([i,j], pos)
+            checkGotKey(pos,pos)
             drawBoard()
             checkPromote(pos[0],pos[1])
             handleTeleport(pos[0],pos[1]) 
@@ -516,6 +517,10 @@ function checkWin() {
     if(levelIndex) setTimeout(() => {
         const screen = document.getElementById('preventClick')
         let summary = `total moves: ${(games[id].leastMove === 0 || games[id].leastMove > Moves) ? `${Moves} (new highscore!)` : `${Moves} (highscore: ${games[id].leastMove})`}`
+        if(id < 24 && games[id+1].isLock) {
+            games[id+1].isLock = false
+            alert(`unlock level ${id + 2}!`)
+        }
         screen.style.zIndex = 3
         screen.innerHTML = 
         `
@@ -523,7 +528,7 @@ function checkWin() {
             <div class="inMenu title">Complete!</div>
             <div class="inMenu summary">${summary}</div>
             <div class="inMenu decision">
-                ${(levelIndex > 1) ? `<div>
+                ${(levelIndex > 1 && !games[id - 1].isLock) ? `<div>
                     <div> previous </div>
                     <a href="../level/?${levelIndex - 1}"> <img src="../../image/prev.png" id="prev"> </a>
                 </div>` : ''}
@@ -531,7 +536,7 @@ function checkWin() {
                     <div> restart </div>
                     <a href="../level/?${levelIndex}"><img src="../../image/reset.png" id="restart"> </a>
                 </div>
-                ${(levelIndex < 25) ? `<div>
+                ${(levelIndex < 25 && !games[id + 1].isLock) ? `<div>
                     <div> next </div>
                     <a href="../level/?${levelIndex + 1}"><img src="../../image/next.png" id="next"> </a>
                 </div>` : ''}
@@ -541,14 +546,10 @@ function checkWin() {
         console.log(`current highscore: ${games[id].leastMove}, total move: ${Moves}`)
         games[id].leastMove = (games[id].leastMove) ? Math.min(games[id].leastMove, Moves) : Moves
         games[id].isDone = true
-        if(id < 25 && games[id+5].isLock) {
-            games[id+5].isLock = false
-            alert(`unlock level ${id + 6}!`)
-        }
         saveLevel()
     },500)
 }
-
+// console.log(games[4].isLock)
 function checkOnpad() {
     for(let i = 0; i < h_boardHeight; i++) {
         for(let j = 0; j < w_boardWidth; j++) {
