@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skibidi Cube</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: black;
+            overflow: hidden;
+        }
+        #block1 {
+            width: 50%;
+            height: 50%;
+            position: absolute;
+            top: 0;
+            right: 0;
+        }
+        #block2 {
+            width: 50%;
+            height: 50%;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+        }
+        #codeContainer {
+            font-size: 15px;
+            font-family: Arial, Helvetica, sans-serif;
+            display: flex;
+            flex-direction: row;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 49%;
+            height: 80%;
+        }
+
+        #textContainer {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            padding-right: 5px;
+        }
+
+        #codehere {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            color: transparent;
+            caret-color: black;
+            resize: none;
+            z-index: 0;
+            white-space: pre;
+            overflow: auto;
+            font: inherit;
+        }
+
+        #betterCodeText {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            border: 3px solid;
+            white-space: pre;
+            overflow: hidden;
+            pointer-events: none;
+            font: inherit;
+        }
+
+        #lineNumber {
+            width: fit-content;
+            padding-right: 5px;
+            margin-right: 3px;
+            height: 100%;
+            background-color: aliceblue;
+            overflow: hidden;
+            border-right: dashed 2px;
+            border-top: 3px solid;
+            border-color: black;
+        }
+
+        .no-select {
+            user-select: none; /* Non-standard syntax for most browsers */
+            -webkit-user-select: none; /* Safari */
+            -moz-user-select: none; /* Firefox */
+            -ms-user-select: none; /* Internet Explorer/Edge */
+        }
+
+        #featureContainer {
+            position: absolute;
+            width: 49%;
+            height: 18%;
+            bottom: 0;
+            left: 0;
+            background-color: aliceblue;
+            border: 3px double black;
+            font-size: 15px;
+            font-family: Arial, Helvetica, sans-serif;
+            /* overflow: hidden; */
+        }
+
+        #colorPalette {
+            position: absolute;
+            width: calc(100% - 6px);
+            /* max-width: 100%; */
+            height: calc(100% - 30px);
+            bottom: 0px;
+            background-color: black;
+            display: inline-flex;
+            flex-direction: row;
+            overflow-x: auto;
+            overflow-y: hidden;
+            white-space: nowrap;
+            border: 3px solid black;
+            font: inherit;
+            padding-bottom: 5px;
+        }
+
+        #colorPalette::-webkit-scrollbar {
+            bottom: 0;
+            height: 5px;
+        }
+
+        #colorPalette::-webkit-scrollbar-thumb {
+            background-color: gray;
+            border-radius: 2.5px;
+        }
+
+        #colorPalette div {
+            height: 100%;
+            aspect-ratio: 1;
+            position: relative;
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px double black;
+            z-index: 2;
+        }
+
+        #colorPalette div:hover {
+            border-color: chartreuse;
+        }
+
+        #colorName {
+            position: absolute;
+            height: 30px;
+            width: auto;
+            min-width: 50px;
+            top: 0;
+            border-radius: 15px;
+            padding: 5px;
+            font: inherit;
+            display: flex;
+            flex-direction: row;
+            white-space: pre;
+            background-color: black;
+            color: aliceblue;
+        }
+
+        #checkboxContainer {
+            position: absolute;
+            right: 5px;
+            top: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: end;
+            justify-content: space-between;
+            height: auto;
+            max-height: 70%;
+            overflow-y: auto;
+        }
+
+        #checkboxContainer::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        #checkboxContainer::-webkit-scrollbar-thumb {
+            background-color: gray;
+            border-radius: 2.5px;
+        }
+
+
+        #checkboxContainer label {
+            position: relative;
+        }
+
+        .maskDiv {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: auto;
+            height: auto;
+            font: inherit;
+            z-index: 2;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        #UIButton {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            gap: 3px;
+            height: 40px;
+            width: auto;
+            display: flex;
+            flex-direction: row;
+            white-space: nowrap;
+            font: inherit;
+        }
+
+        #UIButton button {
+            height: 40px;
+            width: 40px;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #UIButton button img {
+            height: 100%;
+            width: auto;
+        }
+
+        .description {
+            display: none;
+            position: absolute;
+            bottom: 120%;
+            left: 0;
+            white-space: nowrap;
+            padding: 5px;
+            font: inherit;
+            background-color: aliceblue;
+            border: 1px solid black;
+            border-radius: 5px;
+            z-index: 3;
+        }
+
+        #UIButton button:hover .description {
+            display: inline-flex;
+        }
+
+        #mainButton {
+            position: absolute;
+            top:15px;
+            left: 50%;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            width: 0;
+            height: 40px;
+        }
+
+        #mainButton button {
+            width: auto;
+            min-width: 70px;
+            height: 100%;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            white-space: nowrap;
+            border: black double 2px;
+            color: black;
+            background-color: aliceblue;
+            filter: brightness(0.9);
+        }
+
+        #mainButton button:hover {
+            filter: none;
+        }
+
+        #mainButton button:hover .description {
+            display: inline-flex;
+        }
+    </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.175.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.175.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+    <span id="codeContainer">
+        <div id="lineNumber" class="no-select"></div>
+        <div id="textContainer">
+            <textarea id="codehere"></textarea>
+            <div id="betterCodeText"></div>
+        </div>
+    </span>
+    <div id="featureContainer">
+        <span style="position: absolute; top: 0; height: 70%; width: 100%;">
+
+            <div id="UIButton">
+                <button id="saveButton" class="no-select" style="background-color: orange;">
+                    <img src="./image/save.png">
+                    <span class="description">Save Code</span>
+                </button>
+                <button id="resetButton" class="no-select" style="background-color: red;">
+                    <img src="./image/reset.png">
+                    <span class="description">Reset code to default</span>
+                </button>
+                <button id="hintButton" class="no-select" style="background-color: orchid;">
+                    <img src="./image/hint.png">
+                    <span class="description">Hint!</span>
+                </button>
+                <button id="solutionButton" class="no-select" style="background-color: aqua;" disabled>
+                    <img src="./image/solution.png">
+                    <span class="description">Your previous solution</span>
+                </button>
+            </div>
+
+            <div id="mainButton">
+                <button id="runButton" style="background-color: yellow;">
+                    Run code
+                    <span class="description">Ctrl + -> </span>
+                </button>
+                <button id="submitButton" style="background-color: red;">
+                    Submit!
+                    <span class="description">Ctrl + `</span>
+                </button>
+            </div>
+
+            <span id="checkboxContainer">
+                <label>
+                    run immediately
+                    <input type="checkbox" id="chooseRunMethod" checked="">
+                </label>
+                <label>
+                    show axis
+                    <input type="checkbox" id="chooseShowAxis" checked="">
+                </label>
+                <label>
+                    sync rotation
+                    <input type="checkbox" id="chooseSyncRotate" checked="">
+                </label>
+                <label>
+                    auto save
+                    <input type="checkbox" id="chooseAutoSave" checked="">
+                </label>
+                <label>
+                    notify if equal
+                    <input type="checkbox" id="chooseNotifyEqual" checked="">
+                </label>
+            </span>
+
+        </span>
+        <span style="position: absolute; bottom: 0; height: calc(30% + 30px); width: 100%;">
+            <div id="colorName">Color: </div>
+            <div id="colorPalette">
+            </div>
+        </span>
+    </div>
+    <div id="block1"></div>
+    <div id="block2"></div>
+    <script src="script.js" type="module"></script>
+</body>
+</html>
