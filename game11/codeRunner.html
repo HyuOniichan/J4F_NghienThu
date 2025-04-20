@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <!-- html for running user code -->
+    <script type="module">
+        console.log = (...args) => {
+            try {
+            parent.postMessage({ type: 'log', args }, '*');
+            } catch (err) {
+                //do nothing
+            }
+        }
+
+        let infos
+        window.addEventListener('message', (event) => {
+            if(event.data.type !== 'variables') return
+            //get all in need variables 
+            infos = event.data.data
+        })
+
+        window.addEventListener('message', (event) => {
+            if(event.data.type !== 'codeInput') return
+            //get input from message
+            const input = event.data.data 
+
+            try {
+                const func = new Function('x', 'y', 'z', input)
+                let arr = []
+                for(let x = -infos.offsetX; x < infos.width - infos.offsetX; x++) {
+                    for(let y = - infos.offsetY; y < infos.height - infos.offsetY; y++) {
+                        for(let z = - infos.offsetZ; z < infos.depth - infos.offsetZ; z++) {
+                            const res = (func(x, y, z) - 1) % infos.colorPaletteLength + 1
+                            if(infos.colorPalette[res]) {
+                                arr.push([x,y,z, infos.colorPalette[res]])
+                            }
+                        }
+                    }
+                }
+                parent.postMessage({type: 'codeRes', data: {
+                    arr: arr,
+                    input: input
+                }}, '*')
+            } catch(err) {
+                parent.postMessage({type: 'codeRes', data: {
+                    arr: [],
+                    input: input
+                }}, '*')
+            }
+
+        })
+    </script>
+</body>
+</html>

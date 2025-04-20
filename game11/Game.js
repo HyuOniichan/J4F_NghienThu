@@ -27,7 +27,7 @@ class Game {
             FOV : 40,
             near : 0.1,
             far : 1000,
-            background : 'pink',
+            background : 'paleVioletRed',
             lightIntensity : 0.6,
             directLightIntensity : 0.8,
             directLightPosition : [5,5,5],
@@ -46,8 +46,8 @@ class Game {
         this.blockInfo = blockInfo
         this.block1 = new Block(blockInfo)
         this.block2 = new Block(blockInfo)
-        this.canvas1 = new THREEcanvas({...canvasInfo, parent: parent1, children: [this.block1]})
-        this.canvas2 = new THREEcanvas({...canvasInfo, parent: parent2, children: [this.block2]})
+        this.canvas1 = new THREEcanvas({...canvasInfo, parent: parent1, child: this.block1})
+        this.canvas2 = new THREEcanvas({...canvasInfo, parent: parent2, child: this.block2})
         this.initialSolution = initialSolution
         this.initialText = initialText
         this.hint = hint
@@ -57,6 +57,8 @@ class Game {
         this.ignoreSave = false
         this.isComplete = false
         this.submitButton = document.getElementById('submitButton')
+        this.colorPaletteLength = Object.keys(colorPalette).length
+        this.iframe = document.getElementById('codeRunner')
         //functions
         this.Start()
         this.syncInitialShape()
@@ -78,14 +80,40 @@ class Game {
         window.addEventListener('beforeunload', (event) => {
             if(!this.ignoreSave) this.saveProgress()
         })
+        
+        {
+            //listen to message from code runner
+            window.addEventListener('message', (e) => {
+                //console log
+                if(e.data?.type === 'log') {
+                    console.log('[iframe]', ...e.data.args)
+                }
+                //get arr, render and compare
+                if(e.data?.type === 'codeRes') {
+                    const data = e.data.data
+                    this.renderUserCode(data)
+                }
+            })
+            //send in need data to code runner
+            this.iframe.contentWindow.postMessage({type: 'variables', data: {
+                offsetX : this.block1.offsetX,
+                offsetY: this.block1.offsetY,
+                offsetZ: this.block1.offsetZ,
+                width: this.block1.width,
+                height: this.block1.height,
+                depth: this.block1.depth,
+                colorPalette: colorPalette,
+                colorPaletteLength: this.colorPaletteLength
+            }}, '*')
+        }
     }
 
     syncInitialShape() {
         let arr = []
-        for(let x = 0; x < this.blockInfo.width; x++) {
-            for(let y = 0; y < this.blockInfo.height; y++) {
-                for(let z = 0; z < this.blockInfo.depth; z++) {
-                    const res = this.initialSolution(x - this.block2.offsetX, y - this.block2.offsetY, z - this.block2.offsetZ)
+        for(let x = -this.block2.offsetX; x < this.blockInfo.width -this.block2.offsetX; x++) {
+            for(let y = -this.block2.offsetY; y < this.blockInfo.height -this.block2.offsetY; y++) {
+                for(let z = -this.block2.offsetZ; z < this.blockInfo.depth -this.block2.offsetZ; z++) {
+                    const res = (this.initialSolution(x, y, z) - 1) % this.colorPaletteLength + 1
                     if(this.colorPalette[res]) {
                         arr.push([x,y,z, this.colorPalette[res]])
                     }
@@ -97,28 +125,17 @@ class Game {
     }
 
     tryRunCode(input) {
-        try {
-            const func = new Function('x', 'y', 'z', input)
-            let arr = []
-            for(let x = 0; x < this.block1.width; x++) {
-                for(let y = 0; y < this.block1.height; y++) {
-                    for(let z = 0; z < this.block1.depth; z++) {
-                        const res = func(x - this.block1.offsetX, y - this.block1.offsetY, z - this.block1.offsetZ)
-                        if(this.colorPalette[res]) {
-                            arr.push([x,y,z, this.colorPalette[res]])
-                        }
-                    }
-                }
-            }
-            this.block1.renderCubes(arr)
-            requestAnimationFrame(this.faceUser)
-        } catch(err) {
-            this.block1.renderCubes([])
-        }
+        // console.log('try send data to codeRunner')
+        this.iframe.contentWindow.postMessage({type: 'codeInput', data: input}, '*')
+    }
+
+    renderUserCode(data) {
+        this.block1.renderCubes(data.arr)
         requestAnimationFrame(() => {
+            this.faceUser()
             this.isComplete = this.checkEqual()
             if(this.isComplete) {
-                this.setSolution(input)
+                this.setSolution(data.input)
                 if(this.popup) {
                     requestAnimationFrame(() => { 
                         alert('Congratulation!')

@@ -5,7 +5,7 @@ import { colorPalette } from './colorPalette.js'
 //get info
 const url = new URL(window.location.href)
 const levelInfo = url.search.slice(1).split('&').map(info => info.split('=')[1])
-if(levelInfo.length !== 2) {
+if(levelInfo.length !== 2 || puzzles[levelInfo[0]][levelInfo[1]] === undefined) {
     window.location.href = '?difficult=easy&puzzle=1'
 }
 console.log(levelInfo)

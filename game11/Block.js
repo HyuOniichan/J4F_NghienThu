@@ -36,6 +36,8 @@ class Block {
         this.blockGroup = new THREE.Group()
         this.axisGroup = new THREE.Group()
         this.getAxis(blockCenter)
+        this.yLayer = {}
+        this.layerFiltering = false
     }
 
     renderCubes(allowCubes) {
@@ -44,11 +46,9 @@ class Block {
         this.group.remove(this.blockGroup)
         this.blockGroup.clear()
         this.activeCubes = {amount: 0}
+        this.yLayer = {}
         
         for(let [x,y,z, color] of allowCubes) {
-            x -= this.offsetX
-            y -= this.offsetY
-            z -= this.offsetZ
             const cube = new Cube({size: this.cubeSize, color: color || 'white' , edge: true, info: [x,y,z, color]}).group
             cube.position.set(
                 x * this.gapBetweenCubes,
@@ -58,6 +58,9 @@ class Block {
             this.blockGroup.add(cube)
             this.activeCubes[`${x}_${y}_${z}`] = color
             this.activeCubes.amount++
+
+            if(!this.yLayer[`${y}`]) this.yLayer[`${y}`] = []
+            this.yLayer[`${y}`].push(cube)
         }
 
         this.group.add(this.blockGroup)
@@ -65,16 +68,16 @@ class Block {
 
     getAxis(startpos = [0,0,0]) {
         if(!Array.isArray(startpos) || startpos.length !== 3) startpos = [0,0,0]
-
+        const directOffset = 0.5
         const origin = new THREE.Vector3(...startpos)
-        const directX = new THREE.Vector3(2, 0, 0)
-        const directY = new THREE.Vector3(0, 2, 0)
-        const directZ = new THREE.Vector3(0, 0, 2)
+        const directX = new THREE.Vector3(this.offsetX * this.gapBetweenCubes + directOffset, 0, 0)
+        const directY = new THREE.Vector3(0, this.offsetY * this.gapBetweenCubes + directOffset, 0)
+        const directZ = new THREE.Vector3(0, 0, this.offsetZ * this.gapBetweenCubes + directOffset, 0)
 
         const xArrow = new THREE.ArrowHelper(
             directX, // direction
             new THREE.Vector3().subVectors(origin, directX),                     // starting point
-            4,                          // length
+            this.gapBetweenCubes * this.width + directOffset * 2,                          // length
             0xff0000,                   // color
             0.5,                        // arrowhead length
             0.1                        // arrowhead width
@@ -83,7 +86,7 @@ class Block {
         const yArrow = new THREE.ArrowHelper(
             directY,
             new THREE.Vector3().subVectors(origin, directY),
-            4,
+            this.gapBetweenCubes * this.height + directOffset * 2,
             0x00ff00,
             0.5,
             0.1
@@ -92,17 +95,17 @@ class Block {
         const zArrow = new THREE.ArrowHelper(
             directZ,
             new THREE.Vector3().subVectors(origin, directZ),
-            4,
+            this.gapBetweenCubes * this.depth + directOffset * 2,
             0x0000ff,
             0.5,
             0.1
         )
 
         const size = 0.6
-        
-        this.get3DText('X', 'red', [2,0.1,0], size)
-        this.get3DText('Y', 'green', [0,2,0.1], size)
-        this.get3DText('Z', 'blue', [0,0.1,2], size)
+
+        this.get3DText('X', 'red', [this.gapBetweenCubes * (this.width - this.offsetX) + 0.5,0.1,0], size)
+        this.get3DText('Y', 'green', [0,this.gapBetweenCubes * (this.height - this.offsetY) + 0.5,0.1], size)
+        this.get3DText('Z', 'blue', [0,0.1,this.gapBetweenCubes * (this.depth - this.offsetZ) + 0.5], size)
 
         for(let x = -this.offsetX; x < this.width - this.offsetX; x++) {
             if(x !== 0) {
@@ -112,7 +115,7 @@ class Block {
             }
         }
 
-        for(let y = -this.offsetY; y < this.width - this.offsetY; y++) {
+        for(let y = -this.offsetY; y < this.height - this.offsetY; y++) {
             if(y !== 0) {
                 const text = `${y}`
                 const arr = [0, y * this.gapBetweenCubes, 0.1]
@@ -120,7 +123,7 @@ class Block {
             }
         }
 
-        for(let z = -this.offsetZ; z < this.width - this.offsetZ; z++) {
+        for(let z = -this.offsetZ; z < this.depth - this.offsetZ; z++) {
             if(z !== 0) {
                 const text = `${z}`
                 const arr = [0, 0.1, z * this.gapBetweenCubes]
@@ -164,6 +167,14 @@ class Block {
 
     toggleAxis(turnOn) {
         this.axisGroup.visible = turnOn
+    }
+
+    showLayer(layer = 0) {
+        this.layerFiltering = layer !== 'all'
+        Object.entries(this.yLayer).forEach(([key, arr]) => {
+            const b = layer === 'all' || key == layer
+            arr.forEach(cube => cube.visible = b)
+        })
     }
 
     Object3D() {

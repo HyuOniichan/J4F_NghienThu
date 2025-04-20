@@ -202,6 +202,24 @@
             white-space: nowrap;
         }
 
+        .sliderDiv {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: auto;
+            height: 50px;
+            display: flex;
+            align-items: end;
+            flex-direction: column;
+            font: inherit;
+            z-index: 2;
+        }
+
+        .sliderDiv p {
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
         #UIButton {
             position: absolute;
             top: 5px;
@@ -365,6 +383,7 @@
     </div>
     <div id="block1"></div>
     <div id="block2"></div>
+    <iframe id="codeRunner" sandbox="allow-scripts allow-same-origin" style="display: none;" src="codeRunner.html"></iframe>
     <script src="script.js" type="module"></script>
 </body>
 </html>

@@ -4,7 +4,7 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js'
 class THREEcanvas {
     constructor({
         parent = null,
-        children = [],
+        child = null,
         width = window.innerWidth / 2,
         height = window.innerHeight / 2,
         FOV = 40,
@@ -19,7 +19,7 @@ class THREEcanvas {
         syncBlock = null
     } = {}) {
         this.parent = parent
-        this.children = children
+        this.child = child
         this.canvas = document.createElement('canvas')
         this.scene = new THREE.Scene()
         this.camera = new THREE.PerspectiveCamera(FOV, width / height, near, far)
@@ -34,7 +34,6 @@ class THREEcanvas {
         this.damping = damping
         this.syncBlock = syncBlock
         this.isSync = false
-        this.initialDistance = 250 / FOV
         this.update = false
         this.raycaster = new THREE.Raycaster()
         this.mousePos = new THREE.Vector2()
@@ -43,8 +42,7 @@ class THREEcanvas {
     }
 
     init() {
-        // this.camera.position.z = this.initialDistance
-        this.camera.position.set(3.5, 3.5, 3.5)
+        this.camera.position.set(4, 4, 4)
         this.canvas.style.width = `${this.width}px`
         this.canvas.style.height = `${this.height}px`
         this.renderer = new THREE.WebGLRenderer({
@@ -72,13 +70,49 @@ class THREEcanvas {
             this.maskDiv.style.height = `${this.height}px`
             this.maskDiv.classList = 'maskDiv no-select'
         }
-        if(this.parent !== null) {
+        {
+            this.sliderDiv = document.createElement('div')
+            this.sliderDiv.classList = 'sliderDiv'
+            const min = -this.child.offsetY
+            const max = this.child.height - this.child.offsetY - 1
+            this.prevLayerShow = 0
+            this.sliderDiv.innerHTML = `
+            <label>
+                <span class="no-select">Show specific <span style="color: green;">y</span> layer</span>
+                <input type="checkbox" class="showYLayer">
+            </label>
+            <span class="modifyYLayer" style="display: none;">
+                <span><span style="color: green;">y</span> = <span class="currentLayer">0</span></span>
+                <input type="range" class="yLayerSlider" min="${min}" max="${max}" value="${this.prevLayerShow}" step ="1">
+            </span>
+            `
+            const showYLayer = this.sliderDiv.querySelector('.showYLayer')
+            const modifyYLayer = this.sliderDiv.querySelector('.modifyYLayer')
+            showYLayer.addEventListener('change', () => {
+                const b = showYLayer.checked
+                if(b) {
+                    modifyYLayer.style.display = 'inherit'
+                    this.child.showLayer(this.prevLayerShow)
+                }
+                else {
+                    modifyYLayer.style.display = 'none'
+                    this.child.showLayer('all')
+                }
+            })
+            const yLayerSlider = modifyYLayer.querySelector('.yLayerSlider')
+            const currentLayer = modifyYLayer.querySelector('.currentLayer')
+            yLayerSlider.addEventListener('input', () => {
+                this.prevLayerShow = yLayerSlider.value
+                currentLayer.textContent = this.prevLayerShow
+                this.child.showLayer(this.prevLayerShow)
+            })
+        }
+        {
             this.appendTo(this.parent)
             this.parent.append(this.maskDiv)
+            this.parent.append(this.sliderDiv)
         }
-        for(let child of this.children) {
-            this.setChild(child)
-        }
+        this.setChild(this.child)
         if(this.syncBlock !== null) {
             this.setSyncBlock(this.syncBlock)
         }
@@ -95,7 +129,7 @@ class THREEcanvas {
             )
 
             this.raycaster.setFromCamera(this.mousePos, this.camera)
-            const cubes = this.children[0].blockGroup.children.map(group => group.children[0])
+            const cubes = this.child.blockGroup.children.filter(cube => cube.visible).map(group => group.children[0])
             const intersect = this.raycaster.intersectObjects(cubes)[0] || null
             if(intersect) {
                 if(this.pointingCube !== null) {
