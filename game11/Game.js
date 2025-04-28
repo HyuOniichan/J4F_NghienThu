@@ -1,6 +1,7 @@
 import { Block } from './Block.js'
 import { THREEcanvas } from './THREEcanvas.js'
 import { colorPalette } from './colorPalette.js'
+
 class Game {
     constructor({
         levelInfo = {
@@ -8,6 +9,7 @@ class Game {
             level: 1
         },
         blockInfo = {
+            sizes : [],
             width : 5,
             height : 5,
             depth : 5,
@@ -41,6 +43,12 @@ class Game {
         initialText = ' ',
         hint = 'no hint :D'
     } = {}) {
+        //awake :
+        if(blockInfo.sizes.length === 3) {
+            blockInfo.width = blockInfo.sizes[0]
+            blockInfo.height = blockInfo.sizes[1]
+            blockInfo.depth = blockInfo.sizes[2]
+        }
         //initial variables
         this.levelInfo = levelInfo
         this.blockInfo = blockInfo
@@ -69,6 +77,7 @@ class Game {
     Start() {
         this.canvas1.setSyncBlock(this.canvas2)
         this.canvas2.setSyncBlock(this.canvas1)
+        this.setInitCamPos()
         this.canvas1.startAnimate()
         this.canvas2.startAnimate()
         //try get save from localStorage
@@ -79,6 +88,10 @@ class Game {
         }
         window.addEventListener('beforeunload', (event) => {
             if(!this.ignoreSave) this.saveProgress()
+            if(window.developerMode) {
+                const cameraPos = this.canvas1.camera.position.toArray()
+                localStorage.setItem('cameraPos', JSON.stringify(cameraPos))
+            }
         })
         
         {
@@ -134,7 +147,7 @@ class Game {
         requestAnimationFrame(() => {
             this.faceUser()
             this.isComplete = this.checkEqual()
-            if(this.isComplete) {
+            if(this.isComplete && !window.developerMode) {
                 this.setSolution(data.input)
                 if(this.popup) {
                     requestAnimationFrame(() => { 
@@ -201,6 +214,14 @@ class Game {
 
     showHint() {
         alert(this.hint)
+    }
+
+    setInitCamPos() {
+        if(window.developerMode) return
+        const scale = 0.2
+        const maxCamPos = 3 + Math.max(this.blockInfo.width, this.blockInfo.height, this.blockInfo.depth) * scale
+        this.canvas1.setCam(maxCamPos, maxCamPos, maxCamPos)
+        this.canvas2.setCam(maxCamPos, maxCamPos, maxCamPos)
     }
 }
 

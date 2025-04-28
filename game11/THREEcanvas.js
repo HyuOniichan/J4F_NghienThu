@@ -42,7 +42,8 @@ class THREEcanvas {
     }
 
     init() {
-        this.camera.position.set(4, 4, 4)
+        const cameraPos = (window.developerMode) ? JSON.parse(localStorage.getItem('cameraPos') || '[4, 4, 4]') : [4,4,4]
+        this.camera.position.set(...cameraPos)
         this.canvas.style.width = `${this.width}px`
         this.canvas.style.height = `${this.height}px`
         this.renderer = new THREE.WebGLRenderer({
@@ -162,6 +163,10 @@ class THREEcanvas {
             this.camera.quaternion.copy(this.syncBlock.camera.quaternion)
         }
         if(this.isSync) requestAnimationFrame(this.syncRotation)
+    }
+
+    setCam(x,y,z) {
+        this.camera.position.set(x,y,z)
     }
     /**
      * 
