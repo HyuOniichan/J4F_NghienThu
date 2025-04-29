@@ -10,7 +10,7 @@ let basket = {
 };
 
 let objects = [];
-let score = 0;
+let score = 0
 let gameOver = false;
 
 function createObject() {

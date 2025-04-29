@@ -35,8 +35,9 @@ const renderLockTask = () => {
     lockTask = []
     tasks.forEach(taskss => {taskss.forEach(task => {task.isLock ? lockTask.push(task) : ''} )})
     saveLockTask()
-    console.log(lockTask)
 }
+
+let currentDiff = 0
 const initial = () => {
     loadTasks()
     loadAvail()
@@ -49,8 +50,27 @@ const initial = () => {
         {difficult: 'all' , available: `${tasks.reduce((all,current) => {return all + current.filter(item => !item.isDone).length}, 0)}`}
     ]
     saveAvail()
+    currentDiff = localStorage.getItem('currentDiff')
+    renderRollScreen()
+    if(lockTask.length > 0 && lockTask.some(task => task)){
+        eventListen = false
+        removeTaskAfterAccept = true
+        console.log(`total tasks in progress: ${lockTask.length}`)
+        let len = 0
+        lockTask.forEach(task => {
+            if(task) {
+                getTasks.push(task)
+                len++
+            }
+        })
+        handleShowTasks(len)
+    }
 }
-initial()
+
+window.addEventListener('load', () => {
+    initial()
+})
+
 const imageDiv = document.querySelectorAll('.starDiv')
 const background = document.getElementById('taskBackground')
 const description = document.getElementById('description')
@@ -64,56 +84,53 @@ skip.addEventListener('click', () => {
 })
 
 let eventListen = true
-let shouldAddEvent = false
+let removeTaskAfterAccept = false
 let getTasks = []
-if(lockTask.length > 0){
-    eventListen = false
-    shouldAddEvent = true
-    console.log(`total tasks in progress: ${lockTask.length}`)
-    lockTask.forEach(task => {
-        getTasks.push(task)
-    })
-    handleShowTasks(lockTask.length)
-}
-else{
+
+const renderRollScreen = () => {
     scrtask.style.backgroundColor = 'white'
     let difficulty = 'easy'
     let avail = available[0].available
     let offset = 0
-    imageDiv.forEach(image => {
-        image.addEventListener('click', () => {
-            imageDiv.forEach(image => {
-                image.classList.remove('zoom')
-            })
-            image.classList.add('zoom')
-            offset = image.id[2] - '0' 
-            background.style.transform = `translateX(${0 - 450 * offset}px)`
-            description.classList.remove(`${difficulty}Gradient`)
-            avail = available[offset].available
-            switch(offset){
-                case 0:
-                    difficulty = 'easy'
-                    document.documentElement.style.backgroundColor = 'rgba(28,40,120,1)'
-                    break
-                case 1:
-                    difficulty = 'medium'
-                    document.documentElement.style.backgroundColor = 'rgba(118,40,156,1)'
-                    break
-                case 2:
-                    difficulty = 'hard'
-                    document.documentElement.style.backgroundColor = 'rgba(156,40,53,1)'
-                    break
-                default:
-                    difficulty = 'all'
-                    document.documentElement.style.backgroundColor = 'rgba(181,104,83,1)'
-            }
-            description.classList.add(`${difficulty}Gradient`)
-            description.innerText =
-            `difficult : ${difficulty} 
-            total task : ${difficulty === 'all' ? 900 : 300}
-            available task : ${avail}
-            `
+    function renderDifficultChoose(image, index) {
+        if(index !== undefined) {
+            localStorage.setItem('currentDiff', index)
+        }
+        imageDiv.forEach(image => {
+            image.classList.remove('zoom')
         })
+        image.classList.add('zoom')
+        offset = image.id[2] - '0' 
+        background.style.transform = `translateX(${0 - 450 * offset}px)`
+        description.classList.remove(`${difficulty}Gradient`)
+        avail = available[offset].available
+        switch(offset){
+            case 0:
+                difficulty = 'easy'
+                document.documentElement.style.backgroundColor = 'rgba(28,40,120,1)'
+                break
+            case 1:
+                difficulty = 'medium'
+                document.documentElement.style.backgroundColor = 'rgba(118,40,156,1)'
+                break
+            case 2:
+                difficulty = 'hard'
+                document.documentElement.style.backgroundColor = 'rgba(156,40,53,1)'
+                break
+            default:
+                difficulty = 'all'
+                document.documentElement.style.backgroundColor = 'rgba(181,104,83,1)'
+        }
+        description.classList.add(`${difficulty}Gradient`)
+        description.innerText =
+        `difficult : ${difficulty} 
+        total task : ${difficulty === 'all' ? 900 : 300}
+        available task : ${avail}
+        `
+    }
+    renderDifficultChoose(imageDiv[currentDiff])
+    imageDiv.forEach((image, i) => {
+        image.addEventListener('click', () => renderDifficultChoose(image, i))
     })
     let times = 0
     document.querySelectorAll('.rollButton').forEach(button => {
@@ -139,7 +156,7 @@ else{
                 else chosenTasks = tasks[offset]
                 // console.log('run normal')
                 while(rand){
-                    if(!chosenTasks[position].isDone){
+                    if(chosenTasks[position].isDone !== true){
                         rand--
                         tempTask = chosenTasks[position]
                     }
@@ -232,7 +249,7 @@ function handleShowTasks(times) {
             <div class="card">
                 <div class="lock removeTask">
                     <img src="./image/lock.png" class="lockImg">
-                    <div class="lockDescription">remove task (skill issue only)</div>
+                    <div class="lockDescription">remove task ${removeTaskAfterAccept ? '(skill issue ?)' : ''}</div>
                 </div>
                 <div class="inCard" style="background-color: ${color}; height: 100px;">
                     <img class="inCardimg" src=${img}>
@@ -264,7 +281,12 @@ function handleShowTasks(times) {
             </div>
             `
             
-        if(shouldAddEvent) newDiv.querySelector('.removeTask').addEventListener('click', (event) => handleRemoveTask(event, arr))
+        newDiv.querySelector('.removeTask').addEventListener('click', () => {
+            if(removeTaskAfterAccept) handleRemoveTask(arr)
+            newDiv.remove()
+            times--
+            if(!times) location.reload()
+        })
         newDiv.querySelector('.linkTask').addEventListener('click', () => {
             window.open(arr.link, '_blank')
         })
@@ -307,14 +329,18 @@ function handleShowTasks(times) {
             tasks[getDifficult][getIndex].rate = Math.floor(inputRate.value.trim())
             tasks[getDifficult][getIndex].isLock = false
             saveTasks()
-            lockTask.splice(i, 1)
+            lockTask[i] = false
+            times--
             saveLockTask()
-            if(lockTask.length === 0) location.reload();
+            if(!times) location.reload();
         })
         if(!eventListen){
             input.disabled = false
         }
         cardContain.append(newDiv)
+        if(i === 4) {
+            cardContain.style.justifyContent = 'unset'
+        }
         },i * 500)
         if(eventListen) setTimeout(() => {
             document.getElementById('accepted').disabled = false
@@ -322,6 +348,7 @@ function handleShowTasks(times) {
         },1500)
     }
     document.getElementById('accepted').addEventListener('click', () => {
+        document.getElementById('accepted').disabled = true
         getTasks.forEach(arr => {
             let getDifficult = (arr.difficult === 'easy') ? 0 : (arr.difficult === 'medium') ? 1 : 2
             let getIndex = arr.index
@@ -338,6 +365,7 @@ function handleShowTasks(times) {
         })
         console.log(lockTask)
         document.getElementById('declined').disabled = true
+        removeTaskAfterAccept = true
     })
     document.getElementById('declined').addEventListener('click', () => {
         cardContain.innerHTML = ''
@@ -349,11 +377,11 @@ function handleShowTasks(times) {
         getTasks = []
     })
 }
-function handleRemoveTask(event, arr) {
+function handleRemoveTask(arr) {
     const index = (arr.difficult === 'easy') ? 0 : (arr.difficult === 'medium') ? 1 : 2
     alert(`task removed by skill issue user who can't even solve ${index ? 'a' : 'an'} ${arr.difficult} task`)
     tasks[index][arr.index].isLock = false
     saveTasks()
     renderLockTask()
-    location.reload()
+    // location.reload()
 }

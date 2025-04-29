@@ -179,7 +179,6 @@ function drawBoard() {
     const isChange = (onPad != checkpad)
     onPad = checkpad
     if(isChange) console.log(`pad is trigger to ${onPad}`)
-    // isOnTp = checkPieceOnTeleport()
     for(let i = 0; i < h_boardHeight; i++) {
         const childDiv = document.createElement('div')
         childDiv.classList = 'rowDiv'
@@ -191,7 +190,7 @@ function drawBoard() {
             newDiv.style.backgroundColor = color
             newDiv.id = `p${i}_${j}`
             if(board[i][j]) {
-                newDiv.innerHTML = `<div class="cell"><img src="../../image/${board[i][j]}.png" alt="${board[i][j]}" class="chessImg"></div> `
+                newDiv.innerHTML = `<div class="cell"><img src="../../image/${board[i][j]}.png" alt="${board[i][j]}" class="chessImg" draggable="true"></div> `
                 newDiv.addEventListener('click', () => { 
                     if(board[i][j] === currentPiece) {
                         drawBoard()
@@ -271,6 +270,30 @@ let isAnimating = false
 function handlePieceClick(i,j) {
     const piece = board[i][j]
     if(!isChessPiece(piece) || specialBoard[i][j] === 'triggerblock') return
+    const boardDiv = document.getElementById('board')
+    boardDiv.addEventListener('dragend', (e) => {
+        skibidi();
+        const rect = boardDiv.getBoundingClientRect();
+        const x = Math.floor(e.clientX - rect.left);
+        const y = Math.floor(e.clientY - rect.top);
+        if(isAnimating) return
+        Moves++
+        if(checkTakeEnemy(pos[0],pos[1])) {
+            enemies = enemies.filter(enemy => !arrEqual(enemy, pos))
+            console.log(`enemy taken at ${pos[0]} , ${pos[1]}`)
+            board[pos[0]][pos[1]] = 0
+            checkWin()
+        }
+        board[i][j] = 0
+        board[pos[0]][pos[1]] = currentPiece
+        checkGotKey([i,j], pos)
+        checkGotKey(pos,pos)
+        drawBoard()
+        checkPromote(pos[0],pos[1])
+        handleTeleport(pos[0],pos[1]) 
+        currentPiece = ''
+        requestAnimationFrame(checkGravity)
+    });
     console.log(`piece: ${piece}`)
     let row ,col
     drawBoard()
@@ -367,6 +390,9 @@ function handlePieceClick(i,j) {
     })
 }
 
+function handleCircle(pos) {
+    
+}
 function getCircle(i,j) {
     const nextDiv = document.getElementById(`p${i}_${j}`)
     // const notGoToThis = ['untriggerblock']
@@ -1096,3 +1122,13 @@ function checkPieceOnTeleport() {
 //     }
 // ]
 // saveLevel()
+
+// function hello() {
+//     const text = 'hello'
+//     {
+//         const text = 'world'
+//         console.log(text)
+//     }
+//     console.log(text)
+// }
+// hello()
