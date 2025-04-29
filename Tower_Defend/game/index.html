@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tower Defend</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: red;
+        }
+        .field  {
+            background-color: wheat;
+            border: 1px black solid;
+            /* height: calc(95vh);
+            aspect-ratio: 2;
+            max-width: calc(95vw); */
+            height: 693px;
+            width: 1386px;
+            display: grid;
+            grid-template-columns: auto;
+        }
+        .rowDiv {
+            display: flex;
+            width: 100%;
+            height: auto;
+        }
+        .rowDiv div {
+            position: relative;
+            transition: transform 0.1s;
+        }
+        .rowDiv div.cell {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            z-index: 1;
+            display: block;
+        }
+        .img {
+            position: absolute;
+            width: 100%;
+            height: auto;
+        }
+        .selection {
+            height: 100px;
+            width: 100%;
+            display: flex;
+            position: relative;
+            background-color: gray;
+            justify-content: right;
+            gap: 10px;
+            border: 1px solid black;
+        }
+        .selection div {
+            transition: all 0.2s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="field" id="field">
+
+        </div>
+        <div id="selection" class="selection">
+
+        </div>
+    </div>
+    <script src="main.js" type="module"></script>
+</body>
+</html>

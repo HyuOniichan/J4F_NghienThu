@@ -31,6 +31,9 @@ const saveAvail = () => {
     localStorage.setItem('available', JSON.stringify(available));
 };
 
+
+
+
 /* DANGER! For fix bugs only, please only modify it if you know what you are doing */
 // const fixbug = 0
 /* DANGER! For fix bugs only, please only modify it if you know what you are doing */
@@ -75,6 +78,7 @@ saveLockTask()
 // console.log(lockTask)
 }
 renderLockTask()
+/* */
 /* */
 const taskScreen = document.getElementById('taskScreen')
 const cardContain = document.getElementById('cardContain')

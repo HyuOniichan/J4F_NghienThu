@@ -179,7 +179,6 @@ function drawBoard() {
     const isChange = (onPad != checkpad)
     onPad = checkpad
     if(isChange) console.log(`pad is trigger to ${onPad}`)
-    // isOnTp = checkPieceOnTeleport()
     for(let i = 0; i < h_boardHeight; i++) {
         const childDiv = document.createElement('div')
         childDiv.classList = 'rowDiv'
@@ -191,7 +190,7 @@ function drawBoard() {
             newDiv.style.backgroundColor = color
             newDiv.id = `p${i}_${j}`
             if(board[i][j]) {
-                newDiv.innerHTML = `<div class="cell"><img src="../../image/${board[i][j]}.png" alt="${board[i][j]}" class="chessImg"></div> `
+                newDiv.innerHTML = `<div class="cell"><img src="../../image/${board[i][j]}.png" alt="${board[i][j]}" class="chessImg" draggable="true"></div> `
                 newDiv.addEventListener('click', () => { 
                     if(board[i][j] === currentPiece) {
                         drawBoard()
@@ -271,6 +270,30 @@ let isAnimating = false
 function handlePieceClick(i,j) {
     const piece = board[i][j]
     if(!isChessPiece(piece) || specialBoard[i][j] === 'triggerblock') return
+    const boardDiv = document.getElementById('board')
+    boardDiv.addEventListener('dragend', (e) => {
+        skibidi();
+        const rect = boardDiv.getBoundingClientRect();
+        const x = Math.floor(e.clientX - rect.left);
+        const y = Math.floor(e.clientY - rect.top);
+        if(isAnimating) return
+        Moves++
+        if(checkTakeEnemy(pos[0],pos[1])) {
+            enemies = enemies.filter(enemy => !arrEqual(enemy, pos))
+            console.log(`enemy taken at ${pos[0]} , ${pos[1]}`)
+            board[pos[0]][pos[1]] = 0
+            checkWin()
+        }
+        board[i][j] = 0
+        board[pos[0]][pos[1]] = currentPiece
+        checkGotKey([i,j], pos)
+        checkGotKey(pos,pos)
+        drawBoard()
+        checkPromote(pos[0],pos[1])
+        handleTeleport(pos[0],pos[1]) 
+        currentPiece = ''
+        requestAnimationFrame(checkGravity)
+    });
     console.log(`piece: ${piece}`)
     let row ,col
     drawBoard()
@@ -356,7 +379,8 @@ function handlePieceClick(i,j) {
             }
             board[i][j] = 0
             board[pos[0]][pos[1]] = currentPiece
-            checkGotKey([pos[0],pos[1]], pos)
+            checkGotKey([i,j], pos)
+            checkGotKey(pos,pos)
             drawBoard()
             checkPromote(pos[0],pos[1])
             handleTeleport(pos[0],pos[1]) 
@@ -366,6 +390,9 @@ function handlePieceClick(i,j) {
     })
 }
 
+function handleCircle(pos) {
+    
+}
 function getCircle(i,j) {
     const nextDiv = document.getElementById(`p${i}_${j}`)
     // const notGoToThis = ['untriggerblock']
@@ -516,6 +543,10 @@ function checkWin() {
     if(levelIndex) setTimeout(() => {
         const screen = document.getElementById('preventClick')
         let summary = `total moves: ${(games[id].leastMove === 0 || games[id].leastMove > Moves) ? `${Moves} (new highscore!)` : `${Moves} (highscore: ${games[id].leastMove})`}`
+        if(id < 24 && games[id+1].isLock) {
+            games[id+1].isLock = false
+            alert(`unlock level ${id + 2}!`)
+        }
         screen.style.zIndex = 3
         screen.innerHTML = 
         `
@@ -523,7 +554,7 @@ function checkWin() {
             <div class="inMenu title">Complete!</div>
             <div class="inMenu summary">${summary}</div>
             <div class="inMenu decision">
-                ${(levelIndex > 1) ? `<div>
+                ${(levelIndex > 1 && !games[id - 1].isLock) ? `<div>
                     <div> previous </div>
                     <a href="../level/?${levelIndex - 1}"> <img src="../../image/prev.png" id="prev"> </a>
                 </div>` : ''}
@@ -531,7 +562,7 @@ function checkWin() {
                     <div> restart </div>
                     <a href="../level/?${levelIndex}"><img src="../../image/reset.png" id="restart"> </a>
                 </div>
-                ${(levelIndex < 25) ? `<div>
+                ${(levelIndex < 25 && !games[id + 1].isLock) ? `<div>
                     <div> next </div>
                     <a href="../level/?${levelIndex + 1}"><img src="../../image/next.png" id="next"> </a>
                 </div>` : ''}
@@ -541,14 +572,10 @@ function checkWin() {
         console.log(`current highscore: ${games[id].leastMove}, total move: ${Moves}`)
         games[id].leastMove = (games[id].leastMove) ? Math.min(games[id].leastMove, Moves) : Moves
         games[id].isDone = true
-        if(id < 25 && games[id+5].isLock) {
-            games[id+5].isLock = false
-            alert(`unlock level ${id + 6}!`)
-        }
         saveLevel()
     },500)
 }
-
+// console.log(games[4].isLock)
 function checkOnpad() {
     for(let i = 0; i < h_boardHeight; i++) {
         for(let j = 0; j < w_boardWidth; j++) {
@@ -1095,3 +1122,13 @@ function checkPieceOnTeleport() {
 //     }
 // ]
 // saveLevel()
+
+// function hello() {
+//     const text = 'hello'
+//     {
+//         const text = 'world'
+//         console.log(text)
+//     }
+//     console.log(text)
+// }
+// hello()

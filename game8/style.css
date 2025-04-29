@@ -1,0 +1,53 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* Prevent scrollbars */
+    background-image: url('./image/fireCity.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+.cat {
+    position: absolute;
+    height: 15%;
+    transition: top 500ms ease;
+    top: 33%;
+    left: 200px;
+    animation: spin 3s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.floors{
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+}
+
+.floor {
+    position: absolute;
+    width: 100%;
+    bottom: -100px;
+}
+
+.pipe {
+    /* display: none; */
+    position: absolute;
+    height: 100%;
+    right: -100px;
+}
+
+.score {
+    font-family:Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    font-size: 72px;
+    position: absolute;
+    left: 50%;
+    top: 50px;
+    color: aliceblue;
+}
